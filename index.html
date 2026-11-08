@@ -182,6 +182,10 @@
           <i data-lucide="wallet" class="w-4 h-4"></i>
           <span>Daybook & Mandi Expenses</span>
         </button>
+        <button id="nav-masters" onclick="setTab('masters')" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center space-x-2 transition shrink-0">
+          <i data-lucide="sliders" class="w-4 h-4"></i>
+          <span>Masters & Categories</span>
+        </button>
       </div>
     </div>
   </nav>
@@ -563,6 +567,323 @@
         <!-- Expenses Pagination -->
         <div id="expenses-pagination" class="p-3 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between text-xs text-slate-600">
           <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. MASTERS & CATEGORIES MANAGEMENT VIEW -->
+    <div id="view-masters" class="hidden space-y-6">
+      <!-- Master Overview Header Banner -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 p-6 rounded-2xl text-white shadow-md">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 text-[11px] font-semibold border border-emerald-400/30">
+              <i data-lucide="settings-2" class="w-3.5 h-3.5"></i>
+              <span>System Master Directory & Categorization</span>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight">Master Data & Category Management</h2>
+            <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+              Add or remove commodities, farmer suppliers, operational expense categories, and advance purposes.
+              All additions and removals immediately update forms, dropdowns, and filters across the platform.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="resetMastersToDefaults()" class="px-3.5 py-2 text-xs font-semibold bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition flex items-center space-x-1.5 shadow-xs cursor-pointer" title="Reset categories to system defaults">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-emerald-300"></i>
+              <span>Reset Defaults</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Master KPI Metrics Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-white/10">
+          <div class="bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/10">
+            <div class="text-[11px] text-slate-300 flex items-center space-x-1.5">
+              <i data-lucide="wheat" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Commodities</span>
+            </div>
+            <div id="master-count-commodities" class="text-xl font-bold font-mono mt-1 text-white">0</div>
+            <div class="text-[10px] text-slate-400">Tradable crops & grains</div>
+          </div>
+          <div class="bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/10">
+            <div class="text-[11px] text-slate-300 flex items-center space-x-1.5">
+              <i data-lucide="users" class="w-3.5 h-3.5 text-blue-400"></i>
+              <span>Farmers</span>
+            </div>
+            <div id="master-count-farmers" class="text-xl font-bold font-mono mt-1 text-white">0</div>
+            <div class="text-[10px] text-slate-400">Registered growers</div>
+          </div>
+          <div class="bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/10">
+            <div class="text-[11px] text-slate-300 flex items-center space-x-1.5">
+              <i data-lucide="wallet" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Expense Categories</span>
+            </div>
+            <div id="master-count-expenses" class="text-xl font-bold font-mono mt-1 text-white">0</div>
+            <div class="text-[10px] text-slate-400">Daybook classifications</div>
+          </div>
+          <div class="bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/10">
+            <div class="text-[11px] text-slate-300 flex items-center space-x-1.5">
+              <i data-lucide="sprout" class="w-3.5 h-3.5 text-purple-400"></i>
+              <span>Advance Purposes</span>
+            </div>
+            <div id="master-count-purposes" class="text-xl font-bold font-mono mt-1 text-white">0</div>
+            <div class="text-[10px] text-slate-400">Inputs & cash advances</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Section Navigation Pills -->
+      <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-xs font-semibold">
+        <button id="master-tab-btn-all" onclick="switchMasterSection('all')" class="px-3.5 py-1.5 rounded-lg bg-emerald-700 text-white shadow-xs transition shrink-0 cursor-pointer">
+          All Masters
+        </button>
+        <button id="master-tab-btn-commodities" onclick="switchMasterSection('commodities')" class="px-3.5 py-1.5 rounded-lg bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 shadow-xs transition shrink-0 cursor-pointer">
+          🌾 Commodities (<span id="pill-count-commodities">0</span>)
+        </button>
+        <button id="master-tab-btn-farmers" onclick="switchMasterSection('farmers')" class="px-3.5 py-1.5 rounded-lg bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 shadow-xs transition shrink-0 cursor-pointer">
+          👥 Farmers (<span id="pill-count-farmers">0</span>)
+        </button>
+        <button id="master-tab-btn-expenses" onclick="switchMasterSection('expenses')" class="px-3.5 py-1.5 rounded-lg bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 shadow-xs transition shrink-0 cursor-pointer">
+          💼 Expense Categories (<span id="pill-count-expenses">0</span>)
+        </button>
+        <button id="master-tab-btn-purposes" onclick="switchMasterSection('purposes')" class="px-3.5 py-1.5 rounded-lg bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 shadow-xs transition shrink-0 cursor-pointer">
+          🌱 Advance Purposes (<span id="pill-count-purposes">0</span>)
+        </button>
+      </div>
+
+      <!-- MASTER SECTION 1: COMMODITIES -->
+      <div id="master-section-commodities" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+              <i data-lucide="wheat" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                <span>Commodities Master</span>
+                <span id="badge-comm-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">0</span>
+              </h3>
+              <p class="text-xs text-slate-500">Configure pulse crops, grains, and tradable farm produce for bills & weighment</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Commodity Inline Form -->
+        <div class="p-4 bg-emerald-50/40 border-b border-slate-200">
+          <form onsubmit="handleAddCommodity(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Commodity Name *</label>
+              <input type="text" id="new-commodity-name" required placeholder="e.g. Sunflower, Soybean, Cotton" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Regional / Vernacular Name</label>
+              <input type="text" id="new-commodity-regional" placeholder="e.g. ಸೂರ್ಯಕಾಂತಿ / ಸೋಯಾಬೀನ್" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Trading Unit</label>
+              <select id="new-commodity-unit" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:ring-1 focus:ring-emerald-500">
+                <option value="Quintals" selected>Quintals (Qtl)</option>
+                <option value="Bags">Bags</option>
+                <option value="kg">Kilograms (Kg)</option>
+                <option value="Tons">Tons</option>
+              </select>
+            </div>
+            <div>
+              <button type="submit" class="w-full px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>Add Commodity</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Commodities Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200 text-[11px]">
+              <tr>
+                <th class="py-3 px-4">Commodity</th>
+                <th class="py-3 px-4">Regional / Vernacular Name</th>
+                <th class="py-3 px-4">Trading Unit</th>
+                <th class="py-3 px-4 text-center">Linked Bills</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="master-commodities-table-body" class="divide-y divide-slate-100">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MASTER SECTION 2: FARMERS -->
+      <div id="master-section-farmers" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+              <i data-lucide="users" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                <span>Farmers & Counterparties Master</span>
+                <span id="badge-farmer-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">0</span>
+              </h3>
+              <p class="text-xs text-slate-500">Manage farmer accounts, village locations, contact phones, and ledger balances</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="relative">
+              <input type="text" id="master-farmer-search" oninput="onMasterFarmerSearch(this.value)" placeholder="Search name, village, phone..." class="text-xs border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 focus:ring-1 focus:ring-emerald-500 w-56">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+            </div>
+            <button onclick="openAddFarmerModal()" class="px-3 py-1.5 text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg transition flex items-center space-x-1 shadow-xs cursor-pointer">
+              <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+              <span>Add New Farmer</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Farmers Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200 text-[11px]">
+              <tr>
+                <th class="py-3 px-4">Farmer Name & Code</th>
+                <th class="py-3 px-4">Village / Location</th>
+                <th class="py-3 px-4">Phone</th>
+                <th class="py-3 px-4 text-right">Total Advances</th>
+                <th class="py-3 px-4 text-right">Total Bills</th>
+                <th class="py-3 px-4 text-right">Balance Due</th>
+                <th class="py-3 px-4 text-center">Ledger Statement</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="master-farmers-table-body" class="divide-y divide-slate-100">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+        <!-- Farmers Pagination -->
+        <div id="master-farmers-pagination" class="p-3 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between text-xs text-slate-600">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- MASTER SECTION 3: EXPENSE CATEGORIES -->
+      <div id="master-section-expenses" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+              <i data-lucide="wallet" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                <span>Mandi Expense Categories Master</span>
+                <span id="badge-expense-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">0</span>
+              </h3>
+              <p class="text-xs text-slate-500">Classifications for Daybook operational costs (Hamali, Transport, Rent, Maintenance)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Expense Category Inline Form -->
+        <div class="p-4 bg-amber-50/40 border-b border-slate-200">
+          <form onsubmit="handleAddExpenseCategory(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Expense Category Name *</label>
+              <input type="text" id="new-expense-category-name" required placeholder="e.g. HAMALI, TRANSPORT, DIESEL, WAREHOUSE RENT, COMMISSION" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <button type="submit" class="w-full px-4 py-2 text-xs font-semibold rounded-lg bg-amber-700 hover:bg-amber-800 text-white shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>Add Expense Category</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Expense Categories Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200 text-[11px]">
+              <tr>
+                <th class="py-3 px-4">Category Name</th>
+                <th class="py-3 px-4 text-center">Daybook Records Count</th>
+                <th class="py-3 px-4 text-right">Total Recorded Amount</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="master-expenses-table-body" class="divide-y divide-slate-100">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MASTER SECTION 4: ADVANCE PURPOSES -->
+      <div id="master-section-purposes" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center font-bold">
+              <i data-lucide="sprout" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                <span>Advance Purposes & Input Types Master</span>
+                <span id="badge-purpose-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">0</span>
+              </h3>
+              <p class="text-xs text-slate-500">Categories for farmer advances (Seeds, Fertilizer, Land Prep, Harvesting cutting)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Advance Purpose Inline Form -->
+        <div class="p-4 bg-purple-50/40 border-b border-slate-200">
+          <form onsubmit="handleAddAdvancePurpose(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Purpose Name *</label>
+              <input type="text" id="new-advance-purpose-name" required placeholder="e.g. Irrigation, Tractor Hire, Cattle Feed" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Classification Type</label>
+              <select id="new-advance-purpose-type" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:ring-1 focus:ring-emerald-500">
+                <option value="Material / Crop Inputs">Material / Crop Inputs</option>
+                <option value="Cash Advance" selected>Cash Advance</option>
+                <option value="Labor & Machinery">Labor & Machinery</option>
+                <option value="Settlement">Settlement / Carried Forward</option>
+                <option value="General">General / Miscellaneous</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Description / Notes</label>
+              <input type="text" id="new-advance-purpose-desc" placeholder="e.g. Input material supplies" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <button type="submit" class="w-full px-4 py-2 text-xs font-semibold rounded-lg bg-purple-700 hover:bg-purple-800 text-white shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>Add Purpose</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Advance Purposes Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200 text-[11px]">
+              <tr>
+                <th class="py-3 px-4">Purpose Name</th>
+                <th class="py-3 px-4">Type / Classification</th>
+                <th class="py-3 px-4">Description</th>
+                <th class="py-3 px-4 text-center">Linked Advances Count</th>
+                <th class="py-3 px-4 text-right">Total Advance ₹</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="master-purposes-table-body" class="divide-y divide-slate-100">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

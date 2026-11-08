@@ -16,24 +16,48 @@ const STORAGE_KEY = 'GTCO_LEDGER_DATA_V5';
 const PAISABHAI_STORAGE_KEY = 'paisabhai_ledger_store_v3';
 const STOCK_TRACKER_STORAGE_KEY = 'gtco_stock_tracker_v3';
 
-const COMMODITIES = [
-  { id: 'tur', name: 'Tur (Pigeon Pea)', badgeClass: 'commodity-tur', icon: 'wheat' },
-  { id: 'moong', name: 'Moong (Green Gram)', badgeClass: 'commodity-moong', icon: 'sprout' },
-  { id: 'chana', name: 'Chana (Chickpea)', badgeClass: 'commodity-chana', icon: 'circle-dot' },
-  { id: 'urad', name: 'Urad (Black Gram)', badgeClass: 'commodity-urad', icon: 'box' },
-  { id: 'general', name: 'General Harvest Patti', badgeClass: 'commodity-custom', icon: 'package' }
+const DEFAULT_COMMODITIES = [
+  { id: 'comm-tur', name: 'Tur (Pigeon Pea)', regionalName: 'ತೊಗರಿ / तुवर', unit: 'Quintals', badgeClass: 'commodity-tur', icon: 'wheat' },
+  { id: 'comm-moong', name: 'Moog (Green Gram)', regionalName: 'ಹೆಸರು ಕಾಳು / मूँग', unit: 'Quintals', badgeClass: 'commodity-moong', icon: 'sprout' },
+  { id: 'comm-chana', name: 'Chana / Kadli (Chickpea)', regionalName: 'ಕಡಲೆ / चना', unit: 'Quintals', badgeClass: 'commodity-chana', icon: 'circle-dot' },
+  { id: 'comm-urad', name: 'Urad / Udd (Black Gram)', regionalName: 'ಉದ್ದಿನ ಕಾಳು / उड़द', unit: 'Quintals', badgeClass: 'commodity-urad', icon: 'box' },
+  { id: 'comm-soybean', name: 'Soybean', regionalName: 'ಸೋಯಾಬೀನ್ / सोयाबीन', unit: 'Quintals', badgeClass: 'commodity-custom', icon: 'sprout' },
+  { id: 'comm-cotton', name: 'Cotton', regionalName: 'ಹತ್ತಿ / कपास', unit: 'Quintals', badgeClass: 'commodity-custom', icon: 'package' },
+  { id: 'comm-produce', name: 'Commodity Produce', regionalName: 'ಇತರೆ ಧಾನ್ಯ / अन्य', unit: 'Quintals', badgeClass: 'commodity-custom', icon: 'package' }
 ];
 
-const ADVANCE_PURPOSES = [
-  'Cultivation',
-  'Seeds',
-  'Fertilizer & Pesticide',
-  'Harvesting',
-  'Old Balance / Lekka',
-  'Loan',
-  'Personal Use',
-  'Other'
+const DEFAULT_EXPENSE_CATEGORIES = [
+  'Advance Return / Repayment',
+  'Cash Deposit / Jama',
+  'Charity & Religious',
+  'Finance & Interest',
+  'Hamali / Loading Labor',
+  'Machinery Operations',
+  'Mandi Crop Purchase',
+  'Mandi Expenses',
+  'Miscellaneous',
+  'Packaging & Store Materials',
+  'Phone & Office',
+  'Shop & Godown Rent',
+  'Shop Maintenance & Bills',
+  'Staff Salary',
+  'Transport & Freight',
+  'Vehicle Fuel'
 ];
+
+const DEFAULT_ADVANCE_PURPOSES = [
+  { id: 'purp-seeds', name: 'Seeds', type: 'Material / Crop Inputs', desc: 'Deducted against harvest produce return' },
+  { id: 'purp-fert', name: 'Fertilizer & Pesticide', type: 'Material / Crop Inputs', desc: 'Fertilizer, Pesticides & DAP supplies' },
+  { id: 'purp-cult', name: 'Cultivation', type: 'Cash Advance', desc: 'Land preparation and sowing cash advance' },
+  { id: 'purp-mach', name: 'Machinery & Harvesting', type: 'Labor & Machinery', desc: 'Cutting machine, harvesting and labor' },
+  { id: 'purp-loan', name: 'Loan Advance', type: 'Cash Advance', desc: 'Mandi merchant crop finance loan' },
+  { id: 'purp-old', name: 'Old Balance / Lekka', type: 'Settlement', desc: 'Historical carried forward balance' },
+  { id: 'purp-personal', name: 'Personal Use', type: 'Cash Advance', desc: 'Personal cash advance' },
+  { id: 'purp-other', name: 'Other', type: 'General', desc: 'General miscellaneous advance' }
+];
+
+const COMMODITIES = DEFAULT_COMMODITIES;
+const ADVANCE_PURPOSES = DEFAULT_ADVANCE_PURPOSES.map(p => p.name);
 
 // ==========================================
 // APPLICATION STATE
@@ -45,6 +69,9 @@ let state = {
   bills: [],
   expenses: [],
   customCommodities: [],
+  commodities: [],
+  expenseCategories: [],
+  advancePurposes: [],
   activeTab: 'dashboard',
   selectedYear: 'all', // 'all', '2026', '2025', '2024', '2023'
   pagination: {
@@ -55,7 +82,9 @@ let state = {
     farmerPage: 1,
     farmerPerPage: 24,
     expensePage: 1,
-    expensePerPage: 50
+    expensePerPage: 50,
+    masterFarmerPage: 1,
+    masterFarmerPerPage: 20
   },
   filters: {
     advanceFarmer: 'all',
@@ -67,7 +96,9 @@ let state = {
     billSearch: '',
     farmerSearch: '',
     expenseCategory: 'all',
-    expenseSearch: ''
+    expenseSearch: '',
+    masterSection: 'all',
+    masterFarmerSearch: ''
   }
 };
 
@@ -100,6 +131,16 @@ function formatDate(dateStr) {
   }
 }
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ==========================================
 // STORE LOADING & INITIALIZATION
 // ==========================================
@@ -119,6 +160,9 @@ function loadState() {
       state.bills = parsed.bills || [];
       state.expenses = parsed.expenses || [];
       state.customCommodities = parsed.customCommodities || [];
+      state.commodities = (parsed.commodities && parsed.commodities.length > 0) ? parsed.commodities : JSON.parse(JSON.stringify(DEFAULT_COMMODITIES));
+      state.expenseCategories = (parsed.expenseCategories && parsed.expenseCategories.length > 0) ? parsed.expenseCategories : [...DEFAULT_EXPENSE_CATEGORIES];
+      state.advancePurposes = (parsed.advancePurposes && parsed.advancePurposes.length > 0) ? parsed.advancePurposes : JSON.parse(JSON.stringify(DEFAULT_ADVANCE_PURPOSES));
     } else {
       // First run or migrated to V5: Load directly from 2026 Master Data (ledger-data.js)
       if (typeof GTCO_MASTER_DATA !== 'undefined') {
@@ -128,6 +172,9 @@ function loadState() {
         state.expenses = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.expenses || []));
       }
       state.customCommodities = [];
+      state.commodities = JSON.parse(JSON.stringify(DEFAULT_COMMODITIES));
+      state.expenseCategories = [...DEFAULT_EXPENSE_CATEGORIES];
+      state.advancePurposes = JSON.parse(JSON.stringify(DEFAULT_ADVANCE_PURPOSES));
       saveState();
     }
   } catch (e) {
@@ -138,6 +185,9 @@ function loadState() {
       state.bills = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.bills || []));
       state.expenses = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.expenses || []));
     }
+    state.commodities = JSON.parse(JSON.stringify(DEFAULT_COMMODITIES));
+    state.expenseCategories = [...DEFAULT_EXPENSE_CATEGORIES];
+    state.advancePurposes = JSON.parse(JSON.stringify(DEFAULT_ADVANCE_PURPOSES));
   }
 
   updateSyncStatusBadge();
@@ -150,7 +200,10 @@ function saveState() {
       advances: state.advances,
       bills: state.bills,
       expenses: state.expenses,
-      customCommodities: state.customCommodities
+      customCommodities: state.customCommodities,
+      commodities: state.commodities,
+      expenseCategories: state.expenseCategories,
+      advancePurposes: state.advancePurposes
     }));
   } catch (e) {
     console.error('Error saving state:', e);
@@ -196,19 +249,130 @@ function updateSyncStatusBadge() {
 // BUSINESS LOGIC & HELPERS
 // ==========================================
 
+function getBadgeClassForCommodity(name) {
+  const lower = (name || '').toLowerCase();
+  if (lower.includes('tur')) return 'commodity-tur';
+  if (lower.includes('moong') || lower.includes('moog')) return 'commodity-moong';
+  if (lower.includes('chana') || lower.includes('kadli')) return 'commodity-chana';
+  if (lower.includes('urad') || lower.includes('udd')) return 'commodity-urad';
+  return 'commodity-custom';
+}
+
+function getIconForCommodity(name) {
+  const lower = (name || '').toLowerCase();
+  if (lower.includes('tur')) return 'wheat';
+  if (lower.includes('moong') || lower.includes('moog')) return 'sprout';
+  if (lower.includes('chana') || lower.includes('kadli')) return 'circle-dot';
+  if (lower.includes('urad') || lower.includes('udd')) return 'box';
+  return 'package';
+}
+
+function getPurposeEmoji(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('seed')) return '🌱';
+  if (n.includes('fert') || n.includes('pest')) return '🧪';
+  if (n.includes('cultiv')) return '🌾';
+  if (n.includes('machin') || n.includes('harvest')) return '🚜';
+  if (n.includes('loan')) return '💰';
+  if (n.includes('lekka') || n.includes('balance')) return '📜';
+  if (n.includes('person')) return '👤';
+  return '📋';
+}
+
 function getAllCommodities() {
-  const list = [...COMMODITIES];
-  state.customCommodities.forEach(c => {
-    if (!list.some(x => x.name.toLowerCase() === c.toLowerCase())) {
-      list.push({
-        id: 'custom-' + c.toLowerCase().replace(/\s+/g, '-'),
-        name: c,
-        badgeClass: 'commodity-custom',
-        icon: 'package'
-      });
-    }
-  });
+  const base = (state.commodities && state.commodities.length > 0) ? state.commodities : DEFAULT_COMMODITIES;
+  const list = base.map(c => ({
+    id: c.id || ('comm-' + c.name.toLowerCase().replace(/[^a-z0-9]/g, '-')),
+    name: c.name,
+    regionalName: c.regionalName || '',
+    unit: c.unit || 'Quintals',
+    badgeClass: c.badgeClass || getBadgeClassForCommodity(c.name),
+    icon: c.icon || getIconForCommodity(c.name)
+  }));
+
+  if (Array.isArray(state.customCommodities)) {
+    state.customCommodities.forEach(c => {
+      if (!list.some(x => x.name.toLowerCase() === c.toLowerCase())) {
+        list.push({
+          id: 'custom-' + c.toLowerCase().replace(/\s+/g, '-'),
+          name: c,
+          regionalName: '',
+          unit: 'Quintals',
+          badgeClass: 'commodity-custom',
+          icon: 'package'
+        });
+      }
+    });
+  }
+
   return list;
+}
+
+function populateCommodityDropdowns() {
+  const commodities = getAllCommodities();
+
+  // 1. Bill Form select: #bill-commodity
+  const billCommEl = document.getElementById('bill-commodity');
+  if (billCommEl) {
+    const curVal = billCommEl.value;
+    billCommEl.innerHTML = commodities.map(c =>
+      `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}${c.regionalName ? ' (' + escapeHtml(c.regionalName) + ')' : ''}</option>`
+    ).join('');
+    if (curVal && commodities.some(c => c.name === curVal)) {
+      billCommEl.value = curVal;
+    }
+  }
+
+  // 2. Bill Filter select: #filter-bill-commodity
+  const filterCommEl = document.getElementById('filter-bill-commodity');
+  if (filterCommEl) {
+    const curFilter = state.filters.billCommodity || 'all';
+    let opts = `<option value="all">All Commodities (${commodities.length})</option>`;
+    commodities.forEach(c => {
+      opts += `<option value="${escapeHtml(c.name)}" ${curFilter === c.name ? 'selected' : ''}>${escapeHtml(c.name)}</option>`;
+    });
+    filterCommEl.innerHTML = opts;
+  }
+}
+
+function populateAdvancePurposeDropdowns() {
+  const purposes = (state.advancePurposes && state.advancePurposes.length > 0) ? state.advancePurposes : DEFAULT_ADVANCE_PURPOSES;
+
+  // 1. Advance Form select: #advance-purpose
+  const advPurposeEl = document.getElementById('advance-purpose');
+  if (advPurposeEl) {
+    const curVal = advPurposeEl.value;
+    advPurposeEl.innerHTML = purposes.map(p =>
+      `<option value="${escapeHtml(p.name)}">${getPurposeEmoji(p.name)} ${escapeHtml(p.name)}</option>`
+    ).join('');
+    if (curVal && purposes.some(p => p.name === curVal)) {
+      advPurposeEl.value = curVal;
+    }
+  }
+
+  // 2. Advance Filter select: #filter-advance-purpose
+  const filterPurposeEl = document.getElementById('filter-advance-purpose');
+  if (filterPurposeEl) {
+    const curFilter = state.filters.advancePurpose || 'all';
+    let opts = `<option value="all">All Purposes (${purposes.length})</option>`;
+    purposes.forEach(p => {
+      opts += `<option value="${escapeHtml(p.name)}" ${curFilter === p.name ? 'selected' : ''}>${getPurposeEmoji(p.name)} ${escapeHtml(p.name)}</option>`;
+    });
+    filterPurposeEl.innerHTML = opts;
+  }
+}
+
+function populateExpenseCategoryDropdowns() {
+  const categories = (state.expenseCategories && state.expenseCategories.length > 0) ? state.expenseCategories : DEFAULT_EXPENSE_CATEGORIES;
+  const filterExpEl = document.getElementById('expense-category-filter');
+  if (filterExpEl) {
+    const curFilter = state.filters.expenseCategory || 'all';
+    let opts = `<option value="all">All Expense Categories (${categories.length})</option>`;
+    categories.forEach(cat => {
+      opts += `<option value="${escapeHtml(cat)}" ${curFilter === cat ? 'selected' : ''}>${escapeHtml(cat)}</option>`;
+    });
+    filterExpEl.innerHTML = opts;
+  }
 }
 
 function getFarmerById(id) {
@@ -323,7 +487,7 @@ function closeModal(modalId) {
 function setTab(tabName) {
   state.activeTab = tabName;
 
-  ['dashboard', 'advances', 'bills', 'farmers', 'expenses'].forEach(t => {
+  ['dashboard', 'advances', 'bills', 'farmers', 'expenses', 'masters'].forEach(t => {
     const btn = document.getElementById(`nav-${t}`);
     const view = document.getElementById(`view-${t}`);
     if (btn && view) {
@@ -357,6 +521,7 @@ function renderActiveView() {
   else if (state.activeTab === 'bills') renderBillsLedger();
   else if (state.activeTab === 'farmers') renderFarmersDirectory();
   else if (state.activeTab === 'expenses') renderExpensesLedger();
+  else if (state.activeTab === 'masters') renderMastersView();
 
   if (window.lucide) window.lucide.createIcons();
 }
@@ -2158,14 +2323,16 @@ function deleteFarmer(farmerId) {
   const advCount = state.advances.filter(a => a.farmerId === farmerId).length;
   const billCount = state.bills.filter(b => b.farmerId === farmerId).length;
 
+  let msg = `Are you sure you want to delete farmer "${farmer.name}" from the master catalogue?`;
   if (advCount > 0 || billCount > 0) {
-    alert(`Cannot delete ${farmer.name} because they have ${advCount} advance(s) and ${billCount} bill(s) recorded in the ledger. Please settle or delete transactions first.`);
-    return;
+    msg = `Farmer "${farmer.name}" has ${advCount} advance(s) and ${billCount} bill(s) recorded in the ledger.\n\nAre you sure you want to remove this farmer from the master directory? Historical records will retain the farmer's name.`;
   }
 
-  if (confirm(`Are you sure you want to delete farmer ${farmer.name}?`)) {
+  if (confirm(msg)) {
     state.farmers = state.farmers.filter(f => f.id !== farmerId);
     saveState();
+    populateFarmerDropdown('filter-advance-farmer', state.filters.advanceFarmer, true);
+    populateFarmerDropdown('filter-bill-farmer', state.filters.billFarmer, true);
     renderActiveView();
     showToast(`Farmer ${farmer.name} deleted.`);
   }
@@ -2317,11 +2484,511 @@ function showToast(message) {
 }
 
 // ==========================================
+// 6. MASTERS & CATEGORIES MANAGEMENT VIEW
+// ==========================================
+
+function switchMasterSection(sectionKey) {
+  state.filters.masterSection = sectionKey;
+  const sections = ['commodities', 'farmers', 'expenses', 'purposes'];
+
+  sections.forEach(sec => {
+    const el = document.getElementById(`master-section-${sec}`);
+    const pill = document.getElementById(`master-tab-btn-${sec}`);
+    if (sectionKey === 'all' || sectionKey === sec) {
+      if (el) el.classList.remove('hidden');
+    } else {
+      if (el) el.classList.add('hidden');
+    }
+
+    if (pill) {
+      if (sectionKey === sec) {
+        pill.className = 'px-3.5 py-1.5 rounded-lg bg-emerald-700 text-white shadow-xs transition shrink-0 cursor-pointer';
+      } else {
+        pill.className = 'px-3.5 py-1.5 rounded-lg bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 shadow-xs transition shrink-0 cursor-pointer';
+      }
+    }
+  });
+
+  const allPill = document.getElementById('master-tab-btn-all');
+  if (allPill) {
+    if (sectionKey === 'all') {
+      allPill.className = 'px-3.5 py-1.5 rounded-lg bg-emerald-700 text-white shadow-xs transition shrink-0 cursor-pointer';
+    } else {
+      allPill.className = 'px-3.5 py-1.5 rounded-lg bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 shadow-xs transition shrink-0 cursor-pointer';
+    }
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function renderMastersView() {
+  const commodities = getAllCommodities();
+  const farmersCount = state.farmers.length;
+  const expensesCount = (state.expenseCategories && state.expenseCategories.length > 0) ? state.expenseCategories.length : DEFAULT_EXPENSE_CATEGORIES.length;
+  const purposesCount = (state.advancePurposes && state.advancePurposes.length > 0) ? state.advancePurposes.length : DEFAULT_ADVANCE_PURPOSES.length;
+
+  // Header counters
+  const elComm = document.getElementById('master-count-commodities'); if (elComm) elComm.innerText = commodities.length;
+  const elFarm = document.getElementById('master-count-farmers'); if (elFarm) elFarm.innerText = farmersCount;
+  const elExp = document.getElementById('master-count-expenses'); if (elExp) elExp.innerText = expensesCount;
+  const elPurp = document.getElementById('master-count-purposes'); if (elPurp) elPurp.innerText = purposesCount;
+
+  // Pills and section badges
+  const pillComm = document.getElementById('pill-count-commodities'); if (pillComm) pillComm.innerText = commodities.length;
+  const pillFarm = document.getElementById('pill-count-farmers'); if (pillFarm) pillFarm.innerText = farmersCount;
+  const pillExp = document.getElementById('pill-count-expenses'); if (pillExp) pillExp.innerText = expensesCount;
+  const pillPurp = document.getElementById('pill-count-purposes'); if (pillPurp) pillPurp.innerText = purposesCount;
+
+  const badgeComm = document.getElementById('badge-comm-count'); if (badgeComm) badgeComm.innerText = `${commodities.length} Active`;
+  const badgeFarm = document.getElementById('badge-farmer-count'); if (badgeFarm) badgeFarm.innerText = `${farmersCount} Registered`;
+  const badgeExp = document.getElementById('badge-expense-count'); if (badgeExp) badgeExp.innerText = `${expensesCount} Categories`;
+  const badgePurp = document.getElementById('badge-purpose-count'); if (badgePurp) badgePurp.innerText = `${purposesCount} Purposes`;
+
+  renderCommoditiesMaster();
+  renderFarmersMaster();
+  renderExpenseCategoriesMaster();
+  renderAdvancePurposesMaster();
+
+  switchMasterSection(state.filters.masterSection || 'all');
+}
+
+function renderCommoditiesMaster() {
+  const container = document.getElementById('master-commodities-table-body');
+  if (!container) return;
+
+  const commodities = getAllCommodities();
+  if (commodities.length === 0) {
+    container.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">No commodities configured. Use the form above to add one or click "Reset Defaults".</td></tr>`;
+    return;
+  }
+
+  container.innerHTML = commodities.map(c => {
+    const linkedBillsCount = state.bills.filter(b => (b.commodity || '').toLowerCase().includes(c.name.toLowerCase())).length;
+    return `
+      <tr class="hover:bg-slate-50/80 transition">
+        <td class="py-3 px-4 font-semibold text-slate-900 flex items-center space-x-2.5">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <i data-lucide="${c.icon || 'wheat'}" class="w-3.5 h-3.5"></i>
+          </span>
+          <span class="text-xs font-bold text-slate-900">${escapeHtml(c.name)}</span>
+        </td>
+        <td class="py-3 px-4 text-slate-600 font-medium">${c.regionalName ? escapeHtml(c.regionalName) : '<span class="text-slate-400 italic">Not set</span>'}</td>
+        <td class="py-3 px-4">
+          <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(c.unit || 'Quintals')}</span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${linkedBillsCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
+            ${linkedBillsCount} bills
+          </span>
+        </td>
+        <td class="py-3 px-4 text-right">
+          <button onclick="handleRemoveCommodity('${escapeHtml(c.id)}')" class="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-red-600 hover:text-white hover:bg-red-600 border border-red-200 rounded-lg transition cursor-pointer" title="Remove this commodity">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Remove</span>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function handleAddCommodity(e) {
+  e.preventDefault();
+  const nameInput = document.getElementById('new-commodity-name');
+  const regionalInput = document.getElementById('new-commodity-regional');
+  const unitInput = document.getElementById('new-commodity-unit');
+
+  const name = nameInput.value.trim();
+  if (!name) {
+    alert('Please enter a commodity name.');
+    return;
+  }
+
+  const regional = regionalInput ? regionalInput.value.trim() : '';
+  const unit = unitInput ? unitInput.value : 'Quintals';
+
+  const commodities = getAllCommodities();
+  if (commodities.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    alert(`Commodity "${name}" already exists!`);
+    return;
+  }
+
+  const newComm = {
+    id: 'comm-' + Date.now(),
+    name: name,
+    regionalName: regional,
+    unit: unit,
+    badgeClass: getBadgeClassForCommodity(name),
+    icon: getIconForCommodity(name)
+  };
+
+  if (!state.commodities) state.commodities = [];
+  state.commodities.push(newComm);
+  saveState();
+  populateCommodityDropdowns();
+  renderMastersView();
+
+  nameInput.value = '';
+  if (regionalInput) regionalInput.value = '';
+  showToast(`Commodity "${name}" added to master.`);
+}
+
+function handleRemoveCommodity(commId) {
+  const comm = getAllCommodities().find(c => c.id === commId || c.name === commId);
+  const name = comm ? comm.name : commId;
+
+  const linkedBillsCount = state.bills.filter(b => (b.commodity || '').toLowerCase().includes(name.toLowerCase())).length;
+
+  let msg = `Are you sure you want to remove commodity "${name}" from the master catalogue?`;
+  if (linkedBillsCount > 0) {
+    msg += `\n\nNote: There are currently ${linkedBillsCount} bill(s) recorded under this commodity. Removing it removes it from future bill selection dropdowns, but historical records will be preserved.`;
+  }
+
+  if (confirm(msg)) {
+    if (!state.commodities || state.commodities.length === 0) {
+      state.commodities = JSON.parse(JSON.stringify(DEFAULT_COMMODITIES));
+    }
+    state.commodities = state.commodities.filter(c => c.id !== commId && c.name !== commId);
+    if (state.customCommodities) {
+      state.customCommodities = state.customCommodities.filter(c => c !== name);
+    }
+    saveState();
+    populateCommodityDropdowns();
+    renderMastersView();
+    showToast(`Commodity "${name}" removed.`);
+  }
+}
+
+function renderFarmersMaster() {
+  const container = document.getElementById('master-farmers-table-body');
+  const pagContainer = document.getElementById('master-farmers-pagination');
+  if (!container) return;
+
+  let list = [...state.farmers];
+  if (state.filters.masterFarmerSearch) {
+    const s = state.filters.masterFarmerSearch.toLowerCase();
+    list = list.filter(f =>
+      (f.name && f.name.toLowerCase().includes(s)) ||
+      (f.village && f.village.toLowerCase().includes(s)) ||
+      (f.phone && f.phone.includes(s)) ||
+      (f.id && f.id.toLowerCase().includes(s))
+    );
+  }
+
+  const total = list.length;
+  const page = state.pagination.masterFarmerPage || 1;
+  const perPage = state.pagination.masterFarmerPerPage || 20;
+  const totalPages = Math.ceil(total / perPage) || 1;
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  state.pagination.masterFarmerPage = currentPage;
+
+  const start = (currentPage - 1) * perPage;
+  const pageItems = list.slice(start, start + perPage);
+
+  if (pageItems.length === 0) {
+    container.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400">No farmers found matching "${escapeHtml(state.filters.masterFarmerSearch)}".</td></tr>`;
+    if (pagContainer) pagContainer.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = pageItems.map(f => {
+    const m = getFarmerMetrics(f.id);
+    const advCount = state.advances.filter(a => a.farmerId === f.id).length;
+    const billsCount = state.bills.filter(b => b.farmerId === f.id).length;
+
+    let balBadge = 'text-slate-600 bg-slate-100';
+    if (m.remainingAdvanceBalance > 0) balBadge = 'text-amber-800 bg-amber-100 font-bold';
+    else if (m.remainingAdvanceBalance === 0 && (advCount > 0 || billsCount > 0)) balBadge = 'text-emerald-800 bg-emerald-100 font-bold';
+
+    return `
+      <tr class="hover:bg-slate-50/80 transition">
+        <td class="py-3 px-4 font-semibold text-slate-900">
+          <div class="text-xs font-bold text-slate-900">${escapeHtml(f.name)}</div>
+          <div class="text-[10px] font-mono text-slate-400">${escapeHtml(f.id)}</div>
+        </td>
+        <td class="py-3 px-4 text-slate-600">
+          <span class="inline-flex items-center space-x-1">
+            <i data-lucide="map-pin" class="w-3 h-3 text-slate-400"></i>
+            <span>${escapeHtml(f.village || 'NEELAHALLI')}</span>
+          </span>
+        </td>
+        <td class="py-3 px-4 text-slate-600 font-mono text-[11px]">${escapeHtml(f.phone || '-')}</td>
+        <td class="py-3 px-4 text-right font-mono">
+          <div class="text-xs text-slate-900 font-semibold">${formatINR(m.totalAdvances)}</div>
+          <div class="text-[10px] text-slate-400">${advCount} adv</div>
+        </td>
+        <td class="py-3 px-4 text-right font-mono">
+          <div class="text-xs text-slate-900 font-semibold">${formatINR(m.totalBillsValue)}</div>
+          <div class="text-[10px] text-slate-400">${billsCount} bills</div>
+        </td>
+        <td class="py-3 px-4 text-right">
+          <span class="inline-block px-2 py-0.5 rounded text-xs font-mono ${balBadge}">
+            ${formatINR(m.remainingAdvanceBalance)}
+          </span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <button onclick="openFarmerStatementModal('${f.id}')" class="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition cursor-pointer" title="View complete farmer statement">
+            <i data-lucide="file-text" class="w-3 h-3"></i>
+            <span>Statement</span>
+          </button>
+        </td>
+        <td class="py-3 px-4 text-right whitespace-nowrap">
+          <div class="inline-flex items-center space-x-1">
+            <button onclick="editFarmer('${f.id}')" class="p-1.5 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-md transition cursor-pointer" title="Edit Farmer">
+              <i data-lucide="edit" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="deleteFarmer('${f.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition cursor-pointer" title="Delete Farmer">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  if (pagContainer) {
+    pagContainer.innerHTML = `
+      <div>Showing <span class="font-bold">${start + 1}</span> to <span class="font-bold">${Math.min(start + perPage, total)}</span> of <span class="font-bold">${total}</span> farmers</div>
+      <div class="flex items-center space-x-1">
+        <button onclick="onMasterFarmerPageChanged(${currentPage - 1})" ${currentPage <= 1 ? 'disabled class="px-2.5 py-1 rounded border border-slate-200 text-slate-300 cursor-not-allowed"' : 'class="px-2.5 py-1 rounded border border-slate-300 hover:bg-slate-100 text-slate-700 cursor-pointer"'}>Prev</button>
+        <span class="px-2 font-semibold">Page ${currentPage} / ${totalPages}</span>
+        <button onclick="onMasterFarmerPageChanged(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled class="px-2.5 py-1 rounded border border-slate-200 text-slate-300 cursor-not-allowed"' : 'class="px-2.5 py-1 rounded border border-slate-300 hover:bg-slate-100 text-slate-700 cursor-pointer"'}>Next</button>
+      </div>
+    `;
+  }
+}
+
+function onMasterFarmerSearch(val) {
+  state.filters.masterFarmerSearch = val;
+  state.pagination.masterFarmerPage = 1;
+  renderFarmersMaster();
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function onMasterFarmerPageChanged(newPage) {
+  state.pagination.masterFarmerPage = newPage;
+  renderFarmersMaster();
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function renderExpenseCategoriesMaster() {
+  const container = document.getElementById('master-expenses-table-body');
+  if (!container) return;
+
+  const categories = (state.expenseCategories && state.expenseCategories.length > 0) ? state.expenseCategories : DEFAULT_EXPENSE_CATEGORIES;
+  if (categories.length === 0) {
+    container.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-400">No expense categories configured. Use the form above to add one.</td></tr>`;
+    return;
+  }
+
+  container.innerHTML = categories.map(cat => {
+    const matchingExpenses = state.expenses.filter(e => (e.category || '').toUpperCase() === cat.toUpperCase());
+    const count = matchingExpenses.length;
+    const totalAmount = matchingExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+    return `
+      <tr class="hover:bg-slate-50/80 transition">
+        <td class="py-3 px-4 font-semibold text-slate-900 flex items-center space-x-2">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
+            <i data-lucide="tag" class="w-3.5 h-3.5"></i>
+          </span>
+          <span class="text-xs font-bold text-slate-900">${escapeHtml(cat)}</span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${count > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}">
+            ${count} daybook entries
+          </span>
+        </td>
+        <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900">
+          ${formatINR(totalAmount)}
+        </td>
+        <td class="py-3 px-4 text-right">
+          <button onclick="handleRemoveExpenseCategory('${escapeHtml(cat)}')" class="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-red-600 hover:text-white hover:bg-red-600 border border-red-200 rounded-lg transition cursor-pointer" title="Remove category">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Remove</span>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function handleAddExpenseCategory(e) {
+  e.preventDefault();
+  const input = document.getElementById('new-expense-category-name');
+  const cat = input.value.trim();
+  if (!cat) {
+    alert('Please enter an expense category name.');
+    return;
+  }
+
+  if (!state.expenseCategories || state.expenseCategories.length === 0) {
+    state.expenseCategories = [...DEFAULT_EXPENSE_CATEGORIES];
+  }
+
+  if (state.expenseCategories.some(c => c.toUpperCase() === cat.toUpperCase())) {
+    alert(`Category "${cat}" already exists!`);
+    return;
+  }
+
+  state.expenseCategories.push(cat);
+  saveState();
+  populateExpenseCategoryDropdowns();
+  renderMastersView();
+  input.value = '';
+  showToast(`Expense category "${cat}" added.`);
+}
+
+function handleRemoveExpenseCategory(cat) {
+  const matching = state.expenses.filter(e => (e.category || '').toUpperCase() === cat.toUpperCase()).length;
+  let msg = `Are you sure you want to remove expense category "${cat}"?`;
+  if (matching > 0) {
+    msg += `\n\nNote: There are ${matching} existing daybook expense(s) recorded in this category. Removing it removes it from future filters/selection, but historical entries remain intact.`;
+  }
+
+  if (confirm(msg)) {
+    if (!state.expenseCategories || state.expenseCategories.length === 0) {
+      state.expenseCategories = [...DEFAULT_EXPENSE_CATEGORIES];
+    }
+    state.expenseCategories = state.expenseCategories.filter(c => c.toUpperCase() !== cat.toUpperCase());
+    saveState();
+    populateExpenseCategoryDropdowns();
+    renderMastersView();
+    showToast(`Expense category "${cat}" removed.`);
+  }
+}
+
+function renderAdvancePurposesMaster() {
+  const container = document.getElementById('master-purposes-table-body');
+  if (!container) return;
+
+  const purposes = (state.advancePurposes && state.advancePurposes.length > 0) ? state.advancePurposes : DEFAULT_ADVANCE_PURPOSES;
+  if (purposes.length === 0) {
+    container.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">No advance purposes configured. Use the form above to add one.</td></tr>`;
+    return;
+  }
+
+  container.innerHTML = purposes.map(p => {
+    const matchingAdvances = state.advances.filter(a => (a.purpose || '').toLowerCase() === p.name.toLowerCase());
+    const count = matchingAdvances.length;
+    const totalAmount = matchingAdvances.reduce((sum, a) => sum + (Number(a.originalAmount) || 0), 0);
+
+    return `
+      <tr class="hover:bg-slate-50/80 transition">
+        <td class="py-3 px-4 font-semibold text-slate-900 flex items-center space-x-2">
+          <span class="text-base">${getPurposeEmoji(p.name)}</span>
+          <span class="text-xs font-bold text-slate-900">${escapeHtml(p.name)}</span>
+        </td>
+        <td class="py-3 px-4">
+          <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">${escapeHtml(p.type || 'General')}</span>
+        </td>
+        <td class="py-3 px-4 text-slate-600">${p.desc ? escapeHtml(p.desc) : '<span class="text-slate-400 italic">No notes</span>'}</td>
+        <td class="py-3 px-4 text-center">
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${count > 0 ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-500'}">
+            ${count} advances
+          </span>
+        </td>
+        <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900">
+          ${formatINR(totalAmount)}
+        </td>
+        <td class="py-3 px-4 text-right">
+          <button onclick="handleRemoveAdvancePurpose('${escapeHtml(p.id || p.name)}')" class="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-red-600 hover:text-white hover:bg-red-600 border border-red-200 rounded-lg transition cursor-pointer" title="Remove advance purpose">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Remove</span>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function handleAddAdvancePurpose(e) {
+  e.preventDefault();
+  const nameInput = document.getElementById('new-advance-purpose-name');
+  const typeInput = document.getElementById('new-advance-purpose-type');
+  const descInput = document.getElementById('new-advance-purpose-desc');
+
+  const name = nameInput.value.trim();
+  if (!name) {
+    alert('Please enter an advance purpose name.');
+    return;
+  }
+
+  const type = typeInput ? typeInput.value : 'Cash Advance';
+  const desc = descInput ? descInput.value.trim() : '';
+
+  if (!state.advancePurposes || state.advancePurposes.length === 0) {
+    state.advancePurposes = JSON.parse(JSON.stringify(DEFAULT_ADVANCE_PURPOSES));
+  }
+
+  if (state.advancePurposes.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+    alert(`Advance purpose "${name}" already exists!`);
+    return;
+  }
+
+  const newP = {
+    id: 'purp-' + Date.now(),
+    name: name,
+    type: type,
+    desc: desc
+  };
+
+  state.advancePurposes.push(newP);
+  saveState();
+  populateAdvancePurposeDropdowns();
+  renderMastersView();
+
+  nameInput.value = '';
+  if (descInput) descInput.value = '';
+  showToast(`Advance purpose "${name}" added.`);
+}
+
+function handleRemoveAdvancePurpose(idOrName) {
+  const purposes = (state.advancePurposes && state.advancePurposes.length > 0) ? state.advancePurposes : DEFAULT_ADVANCE_PURPOSES;
+  const p = purposes.find(x => x.id === idOrName || x.name === idOrName);
+  const name = p ? p.name : idOrName;
+
+  const matching = state.advances.filter(a => (a.purpose || '').toLowerCase() === name.toLowerCase()).length;
+  let msg = `Are you sure you want to remove advance purpose "${name}"?`;
+  if (matching > 0) {
+    msg += `\n\nNote: There are ${matching} existing advance(s) recorded under this purpose. Removing it removes it from future advance options, but historical records remain intact.`;
+  }
+
+  if (confirm(msg)) {
+    if (!state.advancePurposes || state.advancePurposes.length === 0) {
+      state.advancePurposes = JSON.parse(JSON.stringify(DEFAULT_ADVANCE_PURPOSES));
+    }
+    state.advancePurposes = state.advancePurposes.filter(x => x.id !== idOrName && x.name !== idOrName);
+    saveState();
+    populateAdvancePurposeDropdowns();
+    renderMastersView();
+    showToast(`Advance purpose "${name}" removed.`);
+  }
+}
+
+function resetMastersToDefaults() {
+  if (confirm('Are you sure you want to reset commodities, expense categories, and advance purposes to system defaults?\n\nYour farmer accounts, advances, and bills will NOT be deleted.')) {
+    state.commodities = JSON.parse(JSON.stringify(DEFAULT_COMMODITIES));
+    state.expenseCategories = [...DEFAULT_EXPENSE_CATEGORIES];
+    state.advancePurposes = JSON.parse(JSON.stringify(DEFAULT_ADVANCE_PURPOSES));
+    saveState();
+    populateCommodityDropdowns();
+    populateAdvancePurposeDropdowns();
+    populateExpenseCategoryDropdowns();
+    renderMastersView();
+    showToast('Master categories have been reset to system defaults.');
+  }
+}
+
+// ==========================================
 // INITIALIZATION & EVENT LISTENERS
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
+  populateCommodityDropdowns();
+  populateAdvancePurposeDropdowns();
+  populateExpenseCategoryDropdowns();
   setTab('dashboard');
 
   const today = new Date().toISOString().split('T')[0];
