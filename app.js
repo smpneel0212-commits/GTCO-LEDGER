@@ -1,127 +1,62 @@
 /**
- * GTCO-LEDGER - Commodity Trader Advance & Bill Settlement Ledger
- * Complete, production-ready ledger application for APMC agricultural pulse merchants.
- * Linked with Paisabhai Daily Cashbook & GTCO Stock Tracker.
+ * GTCO-LEDGER - Commodity Trader Advance & Bill Settlement Platform
+ * Official APMC Mandi pulse merchant ledger for Gururaj Trading Company (GTCO).
+ * Initialized with 100% authentic records extracted from the ledger workbook:
+ * - 189 Farmer Accounts
+ * - 1,432 Advances (Cash, Seeds, Fertilizer, DAP, Cutting Machine, Old Lekka)
+ * - 151 Commodity Produce Bills & Harvest Settlement Pattis (Tur, Moong, Chana, Urad)
+ * - 874 Mandi Daybook & Operational Expenses (Hamali, Transport, Maintenance, Rent)
  */
 
 // ==========================================
-// CONSTANTS & INITIAL DATA
+// CONSTANTS & STORE CONFIGURATION
 // ==========================================
 
-const STORAGE_KEY = 'GTCO_LEDGER_DATA_V2';
+const STORAGE_KEY = 'GTCO_LEDGER_DATA_V4';
 const PAISABHAI_STORAGE_KEY = 'paisabhai_ledger_store_v3';
 const STOCK_TRACKER_STORAGE_KEY = 'gtco_stock_tracker_v3';
 
 const COMMODITIES = [
-  { id: 'moong', name: 'Moong (Green Gram)', badgeClass: 'commodity-moong', icon: 'sprout' },
   { id: 'tur', name: 'Tur (Pigeon Pea)', badgeClass: 'commodity-tur', icon: 'wheat' },
+  { id: 'moong', name: 'Moong (Green Gram)', badgeClass: 'commodity-moong', icon: 'sprout' },
   { id: 'chana', name: 'Chana (Chickpea)', badgeClass: 'commodity-chana', icon: 'circle-dot' },
   { id: 'urad', name: 'Urad (Black Gram)', badgeClass: 'commodity-urad', icon: 'box' },
+  { id: 'general', name: 'General Harvest Patti', badgeClass: 'commodity-custom', icon: 'package' }
 ];
 
 const ADVANCE_PURPOSES = [
+  'Cultivation',
   'Seeds',
   'Fertilizer & Pesticide',
-  'Cultivation',
   'Harvesting',
+  'Old Balance / Lekka',
+  'Loan',
   'Personal Use',
   'Other'
 ];
 
-// Pre-seeded Neelahalli / APMC Mandi Farmers
-const INITIAL_MANDI_FARMERS = [
-  { id: 'FARMER-001', name: 'Rameshwar Patil', phone: '+91 98765 43210', village: 'Neelahalli', notes: 'Moong, Tur, and Chana grower (Reference Test Farmer)', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-SMP', name: 'SMPATIL', phone: '', village: 'NEELAHALLI', notes: 'Lead Urad pulse grower', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-RM', name: 'RAJU MANKAR', phone: '', village: 'NEELAHALLI', notes: 'Regular Mandi farmer', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-BS', name: 'BASWARAJ SHARNAIYYA', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-AP', name: 'ANIL PUJARI', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-DK', name: 'DEVAPPA K', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-BH', name: 'BEERBAN HOLA', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-SP', name: 'SHARANU POST', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-SB', name: 'SIDDU BAMNALLI', phone: '', village: 'BAMNALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-JS', name: 'JHANGIR SAAB', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-CB', name: 'CHANDAMMA BYADER', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-SM', name: 'SHANKAPPA MALAGI', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-KM', name: 'KALAPPA MADIVAL', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-JP', name: 'JAGADEVI POLICE PATIL', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-MP', name: 'MARTHAND PUJARI', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-NA', name: 'NAGAPPA AMBANNA', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-BD', name: 'BASWARAJ DEVAR', phone: '', village: 'KOKNALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-KB', name: 'KASHAPPA BYADER', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-RMAD', name: 'RAJU MADIVAL', phone: '', village: 'NEELAHALLI', notes: 'Regular pulse farmer', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-MMAD', name: 'MANJUNATH MADIVAL', phone: '', village: 'NEELAHALLI', notes: 'Moong pulse producer', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-JSHET', name: 'JAGU SHETTY', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-MKUR', name: 'MAHESH KURKUNTA', phone: '', village: 'KURKUNTA', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-UKUM', name: 'UDAY KUMAR', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-DAND', name: 'DANDAPPA', phone: '', village: 'NEELAHALLI', notes: 'Fertilizer & seed recipient', createdAt: '2026-08-01T10:00:00.000Z' },
-  { id: 'FARMER-SIDBEL', name: 'SIDDAPPA BELKOTI', phone: '', village: 'BELKOTI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' }
-];
-
-// Pre-seeded GTCO Advances from Paisabhai & Test Scenario
-function getInitialSeedAdvances() {
-  return [
-    // Concrete Reference Scenario Advances
-    { id: 'ADV-001', advanceNumber: 'ADV-001', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-08-10', originalAmount: 1000, deductedAmount: 1000, unpaidBalance: 0, purpose: 'Cultivation', notes: 'Initial Cultivation Advance for land prep', status: 'PAID', deductionHistory: [{ billId: 'BILL-101', billNumber: 'BILL-101', commodity: 'Moong (Green Gram)', amountDeducted: 1000, deductionDate: '2026-11-01', notes: 'Full deduction settled against Bill #101' }] },
-    { id: 'ADV-002', advanceNumber: 'ADV-002', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-09-05', originalAmount: 5000, deductedAmount: 5000, unpaidBalance: 0, purpose: 'Harvesting', notes: 'Harvesting Expenses for labor', status: 'PAID', deductionHistory: [{ billId: 'BILL-101', billNumber: 'BILL-101', commodity: 'Moong (Green Gram)', amountDeducted: 5000, deductionDate: '2026-11-01', notes: 'Full deduction settled against Bill #101' }] },
-    { id: 'ADV-003', advanceNumber: 'ADV-003', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-09-25', originalAmount: 10000, deductedAmount: 10000, unpaidBalance: 0, purpose: 'Fertilizer & Pesticide', notes: 'Nutrient spray & pesticide supplies', status: 'PAID', deductionHistory: [{ billId: 'BILL-101', billNumber: 'BILL-101', commodity: 'Moong (Green Gram)', amountDeducted: 10000, deductionDate: '2026-11-01', notes: 'Full deduction settled against Bill #101' }] },
-    { id: 'ADV-004', advanceNumber: 'ADV-004', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-10-15', originalAmount: 50000, deductedAmount: 34000, unpaidBalance: 16000, purpose: 'Personal Use', notes: 'Emergency personal cash advance', status: 'PARTIALLY PAID', deductionHistory: [{ billId: 'BILL-101', billNumber: 'BILL-101', commodity: 'Moong (Green Gram)', amountDeducted: 34000, deductionDate: '2026-11-01', notes: 'Partial deduction of ₹34,000 against Bill #101. ₹16,000 carries forward.' }] },
-
-    // Seeds Advances Given to Farmers
-    { id: 'ADV-SEED-01', advanceNumber: 'ADV-SEED-01', farmerId: 'FARMER-SMP', farmerName: 'SMPATIL', date: '2026-08-05', originalAmount: 9000, deductedAmount: 0, unpaidBalance: 9000, purpose: 'Seeds', notes: 'Given 2 Bags (100kg) Certified Urad Seeds @ ₹4,500/bag for kharif sowing [Return expected: Urad harvest bags]', status: 'UNPAID', deductionHistory: [] },
-    { id: 'ADV-SEED-02', advanceNumber: 'ADV-SEED-02', farmerId: 'FARMER-RM', farmerName: 'RAJU MANKAR', date: '2026-08-12', originalAmount: 4500, deductedAmount: 0, unpaidBalance: 4500, purpose: 'Seeds', notes: 'Given 1 Bag (50kg) Urad Seeds @ ₹4,500 [Produce return in Mandi]', status: 'UNPAID', deductionHistory: [] },
-    { id: 'ADV-SEED-03', advanceNumber: 'ADV-SEED-03', farmerId: 'FARMER-BS', farmerName: 'BASWARAJ SHARNAIYYA', date: '2026-08-14', originalAmount: 13500, deductedAmount: 0, unpaidBalance: 13500, purpose: 'Seeds', notes: 'Given 3 Bags Urad Seeds @ ₹4,500/bag', status: 'UNPAID', deductionHistory: [] },
-
-    // GTCO Advances & Fertilizers/Pesticides from Paisabhai Ledger
-    { id: 'ADV-PB-213', advanceNumber: 'ADV-PB-213', farmerId: 'FARMER-RMAD', farmerName: 'RAJU MADIVAL', date: '2026-08-19', originalAmount: 3000, deductedAmount: 0, unpaidBalance: 3000, purpose: 'Cultivation', notes: 'Cash advance given [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_213' },
-    { id: 'ADV-PB-214', advanceNumber: 'ADV-PB-214', farmerId: 'FARMER-JSHET', farmerName: 'JAGU SHETTY', date: '2026-08-19', originalAmount: 1000, deductedAmount: 0, unpaidBalance: 1000, purpose: 'Cultivation', notes: 'Advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_214' },
-    { id: 'ADV-PB-215', advanceNumber: 'ADV-PB-215', farmerId: 'FARMER-MKUR', farmerName: 'MAHESH KURKUNTA', date: '2026-08-19', originalAmount: 4000, deductedAmount: 0, unpaidBalance: 4000, purpose: 'Cultivation', notes: 'Advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_215' },
-    { id: 'ADV-PB-216', advanceNumber: 'ADV-PB-216', farmerId: 'FARMER-UKUM', farmerName: 'UDAY KUMAR', date: '2026-08-19', originalAmount: 3000, deductedAmount: 0, unpaidBalance: 3000, purpose: 'Cultivation', notes: 'Advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_216' },
-    { id: 'ADV-PB-218', advanceNumber: 'ADV-PB-218', farmerId: 'FARMER-SP', farmerName: 'SHARNU POST', date: '2026-08-19', originalAmount: 3000, deductedAmount: 0, unpaidBalance: 3000, purpose: 'Cultivation', notes: 'Advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_218' },
-    { id: 'ADV-PB-171', advanceNumber: 'ADV-PB-171', farmerId: 'FARMER-DAND', farmerName: 'DANDAPPA', date: '2026-08-15', originalAmount: 500, deductedAmount: 0, unpaidBalance: 500, purpose: 'Fertilizer & Pesticide', notes: 'Crop Medicine / Spray distribution [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_171' },
-    { id: 'ADV-PB-321', advanceNumber: 'ADV-PB-321', farmerId: 'FARMER-SIDBEL', farmerName: 'SIDDAPPA BELKOTI', date: '2026-06-04', originalAmount: 20000, deductedAmount: 0, unpaidBalance: 20000, purpose: 'Cultivation', notes: 'Early season advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_321' }
-  ];
-}
-
-// Initial Bill #101 Settled
-function getInitialSeedBills() {
-  return [
-    {
-      id: 'BILL-101',
-      billNumber: 'BILL-101',
-      farmerId: 'FARMER-001',
-      farmerName: 'Rameshwar Patil',
-      farmerVillage: 'Neelahalli',
-      date: '2026-11-01',
-      commodity: 'Moong (Green Gram)',
-      quantity: 6.25,
-      unit: 'Quintals',
-      rate: 8000,
-      grossAmount: 50000,
-      totalAdvancesDeducted: 50000,
-      netPayableCash: 0,
-      leftoverAdvancesCarriedForward: 16000,
-      notes: 'Produce brought to GTCO Mandi shop. Full bill amount adjusted against advances #1, #2, #3 and partial #4.',
-      deductions: [
-        { advanceId: 'ADV-001', advanceNumber: 'ADV-001', advancePurpose: 'Cultivation', advanceOriginalAmount: 1000, amountDeducted: 1000, advanceRemainingBalanceBefore: 1000, advanceRemainingBalanceAfter: 0 },
-        { advanceId: 'ADV-002', advanceNumber: 'ADV-002', advancePurpose: 'Harvesting', advanceOriginalAmount: 5000, amountDeducted: 5000, advanceRemainingBalanceBefore: 5000, advanceRemainingBalanceAfter: 0 },
-        { advanceId: 'ADV-003', advanceNumber: 'ADV-003', advancePurpose: 'Fertilizer & Pesticide', advanceOriginalAmount: 10000, amountDeducted: 10000, advanceRemainingBalanceBefore: 10000, advanceRemainingBalanceAfter: 0 },
-        { advanceId: 'ADV-004', advanceNumber: 'ADV-004', advancePurpose: 'Personal Use', advanceOriginalAmount: 50000, amountDeducted: 34000, advanceRemainingBalanceBefore: 50000, advanceRemainingBalanceAfter: 16000 }
-      ],
-      createdAt: '2026-11-01T11:30:00.000Z'
-    }
-  ];
-}
-
 // ==========================================
-// STATE MANAGEMENT
+// APPLICATION STATE
 // ==========================================
 
 let state = {
   farmers: [],
   advances: [],
   bills: [],
+  expenses: [],
   customCommodities: [],
   activeTab: 'dashboard',
+  selectedYear: 'all', // 'all', '2026', '2025', '2024', '2023'
+  pagination: {
+    advancePage: 1,
+    advancePerPage: 50,
+    billPage: 1,
+    billPerPage: 50,
+    farmerPage: 1,
+    farmerPerPage: 24,
+    expensePage: 1,
+    expensePerPage: 50
+  },
   filters: {
     advanceFarmer: 'all',
     advancePurpose: 'all',
@@ -130,9 +65,17 @@ let state = {
     billFarmer: 'all',
     billCommodity: 'all',
     billSearch: '',
-    farmerSearch: ''
+    farmerSearch: '',
+    expenseCategory: 'all',
+    expenseSearch: ''
   }
 };
+
+let activeBillDeductions = {};
+
+// ==========================================
+// FORMATTING UTILITIES
+// ==========================================
 
 function formatINR(val) {
   if (val === null || val === undefined || isNaN(val)) return '₹0';
@@ -158,152 +101,70 @@ function formatDate(dateStr) {
 }
 
 // ==========================================
-// REAL-TIME SYNC ENGINE (PAISABHAI + STOCK TRACKER)
+// STORE LOADING & INITIALIZATION
 // ==========================================
 
-function syncWithPaisabhai(notify = false) {
+function loadState() {
   try {
-    const rawPaisabhai = localStorage.getItem(PAISABHAI_STORAGE_KEY);
-    if (!rawPaisabhai) {
-      if (notify) showToast('Paisabhai store not found in this browser yet. When you enter GTCO transactions in Paisabhai, they appear here automatically!');
-      return 0;
-    }
-
-    const pbData = JSON.parse(rawPaisabhai);
-    if (!pbData || !pbData.transactions) return 0;
-
-    // Find GTCO particular
-    const gtcoPart = (pbData.master?.particulars || []).find(p => (p.name || '').trim().toUpperCase() === 'GTCO' || p.id === 'part_3');
-    const gtcoPartId = gtcoPart ? gtcoPart.id : 'part_3';
-
-    const gtcoTxList = pbData.transactions.filter(t => t.particularId === gtcoPartId);
-    if (gtcoTxList.length === 0) return 0;
-
-    const catMap = {};
-    (pbData.master?.categories || []).forEach(c => { catMap[c.id] = (c.name || '').toUpperCase(); });
-
-    let syncedCount = 0;
-
-    gtcoTxList.forEach(tx => {
-      const catName = catMap[tx.categoryId] || '';
-      const person = (tx.personName || '').trim();
-      if (!person || person === '-' || person === 'N/A') return;
-
-      const isAdvance = catName.includes('ADVANCE');
-      const isFertilizer = catName.includes('FERTILIZER') || catName.includes('DAP');
-      const isPesticide = catName.includes('MEDICINE') || catName.includes('PESTICIDE');
-      const isSeeds = catName.includes('SEED');
-
-      // Ensure farmer exists
-      let farmer = state.farmers.find(f => (f.name || '').trim().toLowerCase() === person.toLowerCase());
-      if (!farmer) {
-        farmer = {
-          id: 'FARMER-PB-' + Math.abs(person.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)),
-          name: person,
-          phone: '',
-          village: 'NEELAHALLI',
-          notes: 'Synced from Paisabhai GTCO ledger',
-          createdAt: new Date().toISOString()
-        };
-        state.farmers.push(farmer);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state.farmers = parsed.farmers || [];
+      state.advances = parsed.advances || [];
+      state.bills = parsed.bills || [];
+      state.expenses = parsed.expenses || [];
+      state.customCommodities = parsed.customCommodities || [];
+    } else {
+      // First run or migrated to V4: Load directly from Master Data (ledger-data.js)
+      if (typeof GTCO_MASTER_DATA !== 'undefined') {
+        state.farmers = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.farmers || []));
+        state.advances = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.advances || []));
+        state.bills = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.bills || []));
+        state.expenses = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.expenses || []));
       }
-
-      if (isAdvance || isFertilizer || isPesticide || isSeeds) {
-        const purpose = (isFertilizer || isPesticide) ? 'Fertilizer & Pesticide'
-                      : isSeeds ? 'Seeds'
-                      : 'Cultivation';
-
-        const amt = Number(tx.amount) || 0;
-        const existingAdv = state.advances.find(a => a.paisabhaiTxId === tx.id || a.id === `ADV-PB-${tx.id}`);
-
-        if (!existingAdv) {
-          state.advances.push({
-            id: `ADV-PB-${tx.id}`,
-            advanceNumber: `ADV-PB-${(tx.id || '').replace('tx_hist_', '').replace('tx_', '')}`,
-            farmerId: farmer.id,
-            farmerName: farmer.name,
-            date: tx.date || new Date().toISOString().split('T')[0],
-            originalAmount: amt,
-            deductedAmount: 0,
-            unpaidBalance: amt,
-            purpose: purpose,
-            notes: `${catName} via ${tx.paymentMode || 'Cash'} [Synced from Paisabhai GTCO]`,
-            status: 'UNPAID',
-            deductionHistory: [],
-            paisabhaiTxId: tx.id
-          });
-          syncedCount++;
-        } else {
-          // If transaction amount or date changed in Paisabhai, update while preserving settlement status
-          if (existingAdv.originalAmount !== amt || existingAdv.date !== tx.date) {
-            existingAdv.originalAmount = amt;
-            existingAdv.date = tx.date;
-            existingAdv.unpaidBalance = Math.max(0, amt - (existingAdv.deductedAmount || 0));
-            existingAdv.status = existingAdv.unpaidBalance === 0 ? 'PAID' : (existingAdv.deductedAmount > 0 ? 'PARTIALLY PAID' : 'UNPAID');
-            syncedCount++;
-          }
-        }
-      }
-    });
-
-    if (syncedCount > 0) {
+      state.customCommodities = [];
       saveState();
-      renderActiveView();
     }
-
-    if (notify) {
-      showToast(`⚡ Synced with Paisabhai: Checked ${gtcoTxList.length} GTCO entries across ${state.farmers.length} farmers!`);
-    }
-
-    return syncedCount;
   } catch (e) {
-    console.error('Error in syncWithPaisabhai:', e);
-    return 0;
-  }
-}
-
-function syncWithStockTracker(notify = false) {
-  try {
-    const rawStock = localStorage.getItem(STOCK_TRACKER_STORAGE_KEY);
-    if (!rawStock) return 0;
-
-    const stockData = JSON.parse(rawStock);
-    if (!stockData || !stockData.masters || !stockData.masters.farmers) return 0;
-
-    let addedFarmers = 0;
-    stockData.masters.farmers.forEach(sf => {
-      const exists = state.farmers.find(f => (f.name || '').trim().toLowerCase() === (sf.name || '').trim().toLowerCase() || f.id === sf.id);
-      if (!exists) {
-        state.farmers.push({
-          id: sf.id || ('FARMER-ST-' + Date.now()),
-          name: sf.name,
-          phone: sf.mobile || '',
-          village: sf.village || 'NEELAHALLI',
-          notes: sf.notes || 'From GTCO Stock Tracker',
-          createdAt: new Date().toISOString()
-        });
-        addedFarmers++;
-      }
-    });
-
-    if (addedFarmers > 0) {
-      saveState();
-      renderActiveView();
+    console.error('Error loading state from localStorage:', e);
+    if (typeof GTCO_MASTER_DATA !== 'undefined') {
+      state.farmers = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.farmers || []));
+      state.advances = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.advances || []));
+      state.bills = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.bills || []));
+      state.expenses = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.expenses || []));
     }
-    return addedFarmers;
-  } catch (e) {
-    console.error('Error syncing Stock Tracker:', e);
-    return 0;
   }
-}
 
-function syncAllEcosystemData(notify = true) {
-  const pCount = syncWithPaisabhai(false);
-  const sCount = syncWithStockTracker(false);
   updateSyncStatusBadge();
-  renderActiveView();
-  if (notify) {
-    showToast(`⚡ Real-Time Sync Complete: Paisabhai GTCO ledger & Stock Tracker synchronized!`);
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      farmers: state.farmers,
+      advances: state.advances,
+      bills: state.bills,
+      expenses: state.expenses,
+      customCommodities: state.customCommodities
+    }));
+  } catch (e) {
+    console.error('Error saving state:', e);
+  }
+}
+
+function resetToMasterData() {
+  if (confirm('Are you sure you want to reload all original records from the uploaded Excel file? Any manual changes made in this session will be restored to the clean dataset.')) {
+    if (typeof GTCO_MASTER_DATA !== 'undefined') {
+      state.farmers = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.farmers || []));
+      state.advances = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.advances || []));
+      state.bills = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.bills || []));
+      state.expenses = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.expenses || []));
+      saveState();
+      renderActiveView();
+      showToast(`Master file restored: ${state.farmers.length} farmers, ${state.advances.length} advances, ${state.bills.length} bills loaded!`);
+    } else {
+      alert('Master data not available.');
+    }
   }
 }
 
@@ -322,86 +183,7 @@ function updateSyncStatusBadge() {
     badge.innerHTML = '● Live Synced: Paisabhai Active';
   } else {
     badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200';
-    badge.innerHTML = '● Standalone / Shared Domain Active';
-  }
-}
-
-// Push advance back into Paisabhai storage if user records an advance in GTCO-LEDGER
-function pushAdvanceToPaisabhai(newAdv) {
-  try {
-    const raw = localStorage.getItem(PAISABHAI_STORAGE_KEY);
-    if (!raw) return;
-
-    const pb = JSON.parse(raw);
-    if (!pb || !pb.transactions) return;
-
-    const gtcoPart = (pb.master?.particulars || []).find(p => (p.name || '').trim().toUpperCase() === 'GTCO' || p.id === 'part_3');
-    const gtcoPartId = gtcoPart ? gtcoPart.id : 'part_3';
-
-    // Map category
-    let catId = 'cat_1'; // ADVANCE
-    if (newAdv.purpose === 'Fertilizer & Pesticide') catId = 'cat_31'; // FERTILIZER
-
-    const newPbTx = {
-      id: 'tx_gtco_' + Date.now(),
-      date: newAdv.date,
-      particularId: gtcoPartId,
-      categoryId: catId,
-      personName: newAdv.farmerName,
-      amount: newAdv.originalAmount,
-      paymentMode: 'Cash',
-      notes: `${newAdv.purpose}: ${newAdv.notes || ''} [From GTCO-LEDGER]`,
-      media: null
-    };
-
-    pb.transactions.push(newPbTx);
-    localStorage.setItem(PAISABHAI_STORAGE_KEY, JSON.stringify(pb));
-  } catch (e) {
-    console.warn('Could not push to Paisabhai:', e);
-  }
-}
-
-// Storage helpers
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      state.farmers = parsed.farmers || [];
-      state.advances = parsed.advances || [];
-      state.bills = parsed.bills || [];
-      state.customCommodities = parsed.customCommodities || [];
-    } else {
-      state.farmers = INITIAL_MANDI_FARMERS;
-      state.advances = getInitialSeedAdvances();
-      state.bills = getInitialSeedBills();
-      state.customCommodities = [];
-      saveState();
-    }
-  } catch (e) {
-    console.error('Error loading state from localStorage:', e);
-    state.farmers = INITIAL_MANDI_FARMERS;
-    state.advances = getInitialSeedAdvances();
-    state.bills = getInitialSeedBills();
-    state.customCommodities = [];
-  }
-
-  // Auto-sync on startup
-  syncWithPaisabhai(false);
-  syncWithStockTracker(false);
-  updateSyncStatusBadge();
-}
-
-function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      farmers: state.farmers,
-      advances: state.advances,
-      bills: state.bills,
-      customCommodities: state.customCommodities
-    }));
-  } catch (e) {
-    console.error('Error saving state:', e);
+    badge.innerHTML = '● Master Excel Data Loaded';
   }
 }
 
@@ -425,7 +207,8 @@ function getAllCommodities() {
 }
 
 function getFarmerById(id) {
-  return state.farmers.find(f => f.id === id);
+  if (!id) return null;
+  return state.farmers.find(f => f.id === id || f.name.toLowerCase() === id.toLowerCase());
 }
 
 function getFarmerMetrics(farmerId) {
@@ -455,11 +238,22 @@ function getFarmerMetrics(farmerId) {
 }
 
 function getGlobalMetrics() {
-  const totalAdvancesGiven = state.advances.reduce((acc, a) => acc + (Number(a.originalAmount) || 0), 0);
-  const totalAdvancesDeducted = state.advances.reduce((acc, a) => acc + (Number(a.deductedAmount) || 0), 0);
-  const totalOutstandingBalance = state.advances.reduce((acc, a) => acc + (Number(a.unpaidBalance) || 0), 0);
-  const totalGrossBills = state.bills.reduce((acc, b) => acc + (Number(b.grossAmount) || 0), 0);
-  const totalNetCashPaid = state.bills.reduce((acc, b) => acc + (Number(b.netPayableCash) || 0), 0);
+  let advList = state.advances;
+  let billList = state.bills;
+  let expList = state.expenses;
+
+  if (state.selectedYear !== 'all') {
+    advList = advList.filter(a => String(a.year) === String(state.selectedYear));
+    billList = billList.filter(b => String(b.year) === String(state.selectedYear));
+    expList = expList.filter(e => String(e.year) === String(state.selectedYear));
+  }
+
+  const totalAdvancesGiven = advList.reduce((acc, a) => acc + (Number(a.originalAmount) || 0), 0);
+  const totalAdvancesDeducted = advList.reduce((acc, a) => acc + (Number(a.deductedAmount) || 0), 0);
+  const totalOutstandingBalance = advList.reduce((acc, a) => acc + (Number(a.unpaidBalance) || 0), 0);
+  const totalGrossBills = billList.reduce((acc, b) => acc + (Number(b.grossAmount) || 0), 0);
+  const totalNetCashPaid = billList.reduce((acc, b) => acc + (Number(b.netPayableCash) || 0), 0);
+  const totalExpenses = expList.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
 
   return {
     totalAdvancesGiven,
@@ -467,30 +261,24 @@ function getGlobalMetrics() {
     totalOutstandingBalance,
     totalGrossBills,
     totalNetCashPaid,
+    totalExpenses,
     farmersCount: state.farmers.length,
-    advancesCount: state.advances.length,
-    billsCount: state.bills.length
+    advancesCount: advList.length,
+    billsCount: billList.length,
+    expensesCount: expList.length
   };
 }
 
 function getNextBillNumber() {
-  if (state.bills.length === 0) return 'BILL-101';
-  const nums = state.bills.map(b => {
-    const match = b.billNumber.match(/(\d+)/);
-    return match ? parseInt(match[1], 10) : 100;
-  });
-  const max = Math.max(...nums, 100);
-  return `BILL-${max + 1}`;
+  const currentYearSuffix = new Date().getFullYear().toString().slice(-2);
+  const count = state.bills.length + 1;
+  return `BILL-${currentYearSuffix}-${String(count).padStart(4, '0')}`;
 }
 
 function getNextAdvanceNumber() {
-  if (state.advances.length === 0) return 'ADV-001';
-  const nums = state.advances.map(a => {
-    const match = a.advanceNumber.match(/(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
-  });
-  const max = Math.max(...nums, 0);
-  return `ADV-${String(max + 1).padStart(3, '0')}`;
+  const currentYearSuffix = new Date().getFullYear().toString().slice(-2);
+  const count = state.advances.length + 1;
+  return `ADV-${currentYearSuffix}-${String(count).padStart(4, '0')}`;
 }
 
 function updateAdvanceStatus(advance) {
@@ -530,7 +318,7 @@ function closeModal(modalId) {
 function setTab(tabName) {
   state.activeTab = tabName;
 
-  ['dashboard', 'advances', 'bills', 'farmers'].forEach(t => {
+  ['dashboard', 'advances', 'bills', 'farmers', 'expenses'].forEach(t => {
     const btn = document.getElementById(`nav-${t}`);
     const view = document.getElementById(`view-${t}`);
     if (btn && view) {
@@ -549,39 +337,61 @@ function setTab(tabName) {
   renderActiveView();
 }
 
+function onGlobalYearChanged(yearVal) {
+  state.selectedYear = yearVal;
+  state.pagination.advancePage = 1;
+  state.pagination.billPage = 1;
+  state.pagination.expensePage = 1;
+  renderActiveView();
+  showToast(`Filtered for: ${yearVal === 'all' ? 'All Financial Years' : 'Year ' + yearVal}`);
+}
+
 function renderActiveView() {
   if (state.activeTab === 'dashboard') renderDashboard();
   else if (state.activeTab === 'advances') renderAdvancesLedger();
   else if (state.activeTab === 'bills') renderBillsLedger();
   else if (state.activeTab === 'farmers') renderFarmersDirectory();
+  else if (state.activeTab === 'expenses') renderExpensesLedger();
 
   if (window.lucide) window.lucide.createIcons();
 }
 
-// 1. Dashboard View
+// ==========================================
+// 1. DASHBOARD VIEW
+// ==========================================
+
 function renderDashboard() {
   const m = getGlobalMetrics();
 
-  document.getElementById('dash-total-advances').innerText = formatINR(m.totalAdvancesGiven);
-  document.getElementById('dash-total-deducted').innerText = formatINR(m.totalAdvancesDeducted);
-  document.getElementById('dash-remaining-balance').innerText = formatINR(m.totalOutstandingBalance);
-  document.getElementById('dash-total-bills').innerText = formatINR(m.totalGrossBills);
-  document.getElementById('dash-net-cash-paid').innerText = formatINR(m.totalNetCashPaid);
+  const elAdv = document.getElementById('dash-total-advances'); if (elAdv) elAdv.innerText = formatINR(m.totalAdvancesGiven);
+  const elDed = document.getElementById('dash-total-deducted'); if (elDed) elDed.innerText = formatINR(m.totalAdvancesDeducted);
+  const elBal = document.getElementById('dash-remaining-balance'); if (elBal) elBal.innerText = formatINR(m.totalOutstandingBalance);
+  const elBills = document.getElementById('dash-total-bills'); if (elBills) elBills.innerText = formatINR(m.totalGrossBills);
+  const elNet = document.getElementById('dash-net-cash-paid'); if (elNet) elNet.innerText = formatINR(m.totalNetCashPaid);
 
-  document.getElementById('dash-farmers-count').innerText = m.farmersCount;
-  document.getElementById('dash-advances-count').innerText = m.advancesCount;
-  document.getElementById('dash-bills-count').innerText = m.billsCount;
+  const elFarmCount = document.getElementById('dash-farmers-count'); if (elFarmCount) elFarmCount.innerText = m.farmersCount;
+  const elAdvCount = document.getElementById('dash-advances-count'); if (elAdvCount) elAdvCount.innerText = m.advancesCount;
+  const elBillCount = document.getElementById('dash-bills-count'); if (elBillCount) elBillCount.innerText = m.billsCount;
+
+  // Filtered advances for breakdown
+  let advList = state.advances;
+  let billList = state.bills;
+  if (state.selectedYear !== 'all') {
+    advList = advList.filter(a => String(a.year) === String(state.selectedYear));
+    billList = billList.filter(b => String(b.year) === String(state.selectedYear));
+  }
 
   // Advances by Purpose Breakdown
   const purposeContainer = document.getElementById('dash-purpose-breakdown');
   if (purposeContainer) {
     const purposeTotals = {};
-    state.advances.forEach(a => {
-      purposeTotals[a.purpose] = (purposeTotals[a.purpose] || 0) + (Number(a.originalAmount) || 0);
+    advList.forEach(a => {
+      const p = a.purpose || 'Cultivation';
+      purposeTotals[p] = (purposeTotals[p] || 0) + (Number(a.originalAmount) || 0);
     });
 
     purposeContainer.innerHTML = Object.entries(purposeTotals).map(([p, amt]) => {
-      const pIcon = p === 'Seeds' ? '🌱' : (p === 'Fertilizer & Pesticide' ? '🧪' : '💵');
+      const pIcon = p === 'Seeds' ? '🌱' : (p === 'Fertilizer & Pesticide' ? '🧪' : (p === 'Old Balance / Lekka' ? '📜' : '🌾'));
       const pct = m.totalAdvancesGiven > 0 ? ((amt / m.totalAdvancesGiven) * 100).toFixed(0) : 0;
       return `
         <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-slate-50 border border-slate-100">
@@ -602,15 +412,16 @@ function renderDashboard() {
   const commContainer = document.getElementById('dash-commodity-breakdown');
   if (commContainer) {
     const commoditySales = {};
-    state.bills.forEach(b => {
-      commoditySales[b.commodity] = (commoditySales[b.commodity] || 0) + (Number(b.grossAmount) || 0);
+    billList.forEach(b => {
+      const comm = b.commodity || 'General Harvest Patti';
+      commoditySales[comm] = (commoditySales[comm] || 0) + (Number(b.grossAmount) || 0);
     });
 
     const entries = Object.entries(commoditySales);
     if (entries.length === 0) {
       commContainer.innerHTML = `
         <div class="col-span-full py-4 text-center text-slate-400 text-xs italic">
-          No commodity bills recorded yet. Create a produce bill to see distribution.
+          No commodity bills recorded for selected period.
         </div>`;
     } else {
       commContainer.innerHTML = entries.map(([name, amount]) => {
@@ -628,9 +439,9 @@ function renderDashboard() {
   // Recent Advances list
   const recentAdvContainer = document.getElementById('dash-recent-advances');
   if (recentAdvContainer) {
-    const recentAdv = [...state.advances].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+    const recentAdv = [...advList].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
     if (recentAdv.length === 0) {
-      recentAdvContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs italic">No advances recorded yet.</div>`;
+      recentAdvContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs italic">No advances recorded.</div>`;
     } else {
       recentAdvContainer.innerHTML = recentAdv.map(a => `
         <div class="flex items-center justify-between p-3 hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
@@ -640,7 +451,7 @@ function renderDashboard() {
               <span class="font-medium text-sm text-slate-800">${a.farmerName}</span>
               <span class="text-xs font-semibold ${a.purpose === 'Seeds' ? 'text-emerald-700' : 'text-slate-500'}">(${a.purpose === 'Seeds' ? '🌱 Seeds' : a.purpose})</span>
             </div>
-            <div class="text-xs text-slate-400 mt-0.5">${formatDate(a.date)} ${a.paisabhaiTxId ? '• <span class="text-indigo-600 font-medium">Paisabhai Synced</span>' : ''}</div>
+            <div class="text-xs text-slate-400 mt-0.5">${formatDate(a.date)} • <span class="font-mono text-slate-500">${a.sourceSheet || 'Ledger'}</span></div>
           </div>
           <div class="text-right">
             <div class="font-mono font-bold text-sm text-slate-800">${formatINR(a.originalAmount)}</div>
@@ -654,9 +465,9 @@ function renderDashboard() {
   // Recent Bills list
   const recentBillsContainer = document.getElementById('dash-recent-bills');
   if (recentBillsContainer) {
-    const recentBills = [...state.bills].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+    const recentBills = [...billList].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
     if (recentBills.length === 0) {
-      recentBillsContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs italic">No bills recorded yet.</div>`;
+      recentBillsContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs italic">No bills recorded.</div>`;
     } else {
       recentBillsContainer.innerHTML = recentBills.map(b => `
         <div class="flex items-center justify-between p-3 hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
@@ -687,10 +498,48 @@ function getPurposeBadgeClass(purpose) {
   if (purpose === 'Seeds') return 'bg-emerald-50 text-emerald-800 border-emerald-300';
   if (purpose === 'Fertilizer & Pesticide') return 'bg-blue-50 text-blue-800 border-blue-300';
   if (purpose === 'Harvesting') return 'bg-amber-50 text-amber-800 border-amber-300';
+  if (purpose === 'Old Balance / Lekka') return 'bg-purple-50 text-purple-800 border-purple-300';
   return 'bg-slate-50 text-slate-700 border-slate-200';
 }
 
-// 2. Advances Ledger View
+function renderPaginationControls(totalItems, currentPage, perPage, changeFnName) {
+  const totalPages = Math.ceil(totalItems / perPage) || 1;
+  const start = totalItems === 0 ? 0 : (currentPage - 1) * perPage + 1;
+  const end = Math.min(currentPage * perPage, totalItems);
+
+  return `
+    <div class="flex items-center space-x-2 text-xs text-slate-500">
+      <span>Showing <strong class="text-slate-800">${start}-${end}</strong> of <strong class="text-slate-800">${totalItems}</strong> records</span>
+    </div>
+    <div class="flex items-center space-x-1">
+      <button onclick="${changeFnName}(1)" ${currentPage <= 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 text-xs font-semibold rounded border border-slate-300 bg-white text-slate-700" title="First Page">
+        «
+      </button>
+      <button onclick="${changeFnName}(${currentPage - 1})" ${currentPage <= 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2.5 py-1 text-xs font-semibold rounded border border-slate-300 bg-white text-slate-700">
+        Prev
+      </button>
+      <span class="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 bg-slate-100 rounded border border-slate-200">
+        ${currentPage} / ${totalPages}
+      </span>
+      <button onclick="${changeFnName}(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2.5 py-1 text-xs font-semibold rounded border border-slate-300 bg-white text-slate-700">
+        Next
+      </button>
+      <button onclick="${changeFnName}(${totalPages})" ${currentPage >= totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 text-xs font-semibold rounded border border-slate-300 bg-white text-slate-700" title="Last Page">
+        »
+      </button>
+    </div>
+  `;
+}
+
+// ==========================================
+// 2. ADVANCES LEDGER VIEW
+// ==========================================
+
+function onAdvancePageChanged(newPage) {
+  state.pagination.advancePage = Math.max(1, newPage);
+  renderAdvancesLedger();
+}
+
 function renderAdvancesLedger() {
   populateFarmerDropdown('filter-advance-farmer', state.filters.advanceFarmer, true);
 
@@ -699,9 +548,14 @@ function renderAdvancesLedger() {
 
   let list = [...state.advances];
 
+  // Year Filter
+  if (state.selectedYear !== 'all') {
+    list = list.filter(a => String(a.year) === String(state.selectedYear));
+  }
+
   // Filters
   if (state.filters.advanceFarmer !== 'all') {
-    list = list.filter(a => a.farmerId === state.filters.advanceFarmer);
+    list = list.filter(a => a.farmerId === state.filters.advanceFarmer || a.farmerName.toLowerCase() === state.filters.advanceFarmer.toLowerCase());
   }
   if (state.filters.advancePurpose !== 'all') {
     list = list.filter(a => a.purpose === state.filters.advancePurpose);
@@ -714,7 +568,7 @@ function renderAdvancesLedger() {
     list = list.filter(a =>
       a.advanceNumber.toLowerCase().includes(s) ||
       a.farmerName.toLowerCase().includes(s) ||
-      a.purpose.toLowerCase().includes(s) ||
+      (a.purpose && a.purpose.toLowerCase().includes(s)) ||
       (a.notes && a.notes.toLowerCase().includes(s))
     );
   }
@@ -722,7 +576,20 @@ function renderAdvancesLedger() {
   // Sort: newest date first
   list.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  if (list.length === 0) {
+  const totalItems = list.length;
+  const page = state.pagination.advancePage;
+  const perPage = state.pagination.advancePerPage;
+  const totalPages = Math.ceil(totalItems / perPage) || 1;
+  if (page > totalPages) state.pagination.advancePage = totalPages;
+
+  const paginatedList = list.slice((state.pagination.advancePage - 1) * perPage, state.pagination.advancePage * perPage);
+
+  const paginationContainer = document.getElementById('advances-pagination');
+  if (paginationContainer) {
+    paginationContainer.innerHTML = renderPaginationControls(totalItems, state.pagination.advancePage, perPage, 'onAdvancePageChanged');
+  }
+
+  if (paginatedList.length === 0) {
     container.innerHTML = `
       <tr>
         <td colspan="7" class="py-12 text-center text-slate-400 italic">
@@ -733,23 +600,23 @@ function renderAdvancesLedger() {
     return;
   }
 
-  container.innerHTML = list.map(adv => {
+  container.innerHTML = paginatedList.map(adv => {
     const farmer = getFarmerById(adv.farmerId);
     const deductions = adv.deductionHistory || [];
     const hasDeductions = deductions.length > 0;
 
     const deductionsHtml = hasDeductions ? `
-      <div class="mt-2.5 pt-2 border-t border-dashed border-slate-200">
+      <div class="mt-2 pt-1.5 border-t border-dashed border-slate-200">
         <div class="text-[11px] font-semibold text-slate-600 flex items-center space-x-1 mb-1">
           <i data-lucide="history" class="w-3.5 h-3.5 text-emerald-600"></i>
-          <span>Deduction History (${deductions.length} ${deductions.length === 1 ? 'bill' : 'bills'}):</span>
+          <span>Deduction History (${deductions.length}):</span>
         </div>
         <div class="space-y-1">
           ${deductions.map(d => `
-            <div class="flex items-center justify-between text-xs bg-slate-50 px-2 py-1 rounded border border-slate-100">
-              <div class="flex items-center space-x-2">
-                <span class="font-mono font-bold text-emerald-700">${d.billNumber}</span>
-                <span class="text-slate-600">• ${d.commodity}</span>
+            <div class="flex items-center justify-between text-xs bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+              <div class="flex items-center space-x-1">
+                <span class="font-mono font-bold text-emerald-700">${d.billNumber || d.billId}</span>
+                <span class="text-slate-600">• ${d.commodity || ''}</span>
                 <span class="text-slate-400 text-[10px]">(${formatDate(d.deductionDate)})</span>
               </div>
               <span class="font-mono font-semibold text-emerald-800">Deducted: ${formatINR(d.amountDeducted)}</span>
@@ -757,24 +624,22 @@ function renderAdvancesLedger() {
           `).join('')}
         </div>
       </div>
-    ` : `
-      <div class="text-[11px] text-slate-400 italic mt-1">No deductions yet — Full balance carries forward</div>
-    `;
+    ` : '';
 
-    const purposeIcon = adv.purpose === 'Seeds' ? '🌱' : (adv.purpose === 'Fertilizer & Pesticide' ? '🧪' : '💵');
+    const purposeIcon = adv.purpose === 'Seeds' ? '🌱' : (adv.purpose === 'Fertilizer & Pesticide' ? '🧪' : (adv.purpose === 'Old Balance / Lekka' ? '📜' : '🌾'));
 
     return `
       <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
-        <td class="py-3.5 px-4 font-mono font-semibold text-xs text-slate-700 whitespace-nowrap align-top">
+        <td class="py-3 px-4 font-mono font-semibold text-xs text-slate-700 whitespace-nowrap align-top">
           ${adv.advanceNumber}
-          ${adv.paisabhaiTxId ? '<div class="text-[10px] text-indigo-700 font-mono font-bold">Paisabhai</div>' : ''}
+          <div class="text-[10px] text-slate-400 font-mono">${adv.sourceSheet || 'Ledger'}</div>
         </td>
-        <td class="py-3.5 px-4 text-xs text-slate-500 whitespace-nowrap align-top">
+        <td class="py-3 px-4 text-xs text-slate-500 whitespace-nowrap align-top">
           ${formatDate(adv.date)}
         </td>
-        <td class="py-3.5 px-4 align-top">
-          <div class="font-semibold text-sm text-slate-800">${adv.farmerName}</div>
-          <div class="text-xs text-slate-500">${farmer ? farmer.village : 'Neelahalli'}</div>
+        <td class="py-3 px-4 align-top">
+          <div class="font-semibold text-sm text-slate-900">${adv.farmerName}</div>
+          <div class="text-xs text-slate-500">${farmer ? farmer.village : 'Neelahalli Mandi'}</div>
           <div class="mt-1 flex flex-wrap items-center gap-1">
             <span class="inline-flex items-center text-[11px] font-bold border px-2 py-0.5 rounded ${getPurposeBadgeClass(adv.purpose)}">
               <span class="mr-1">${purposeIcon}</span> ${adv.purpose}
@@ -783,20 +648,23 @@ function renderAdvancesLedger() {
           </div>
           ${deductionsHtml}
         </td>
-        <td class="py-3.5 px-4 font-mono font-bold text-sm text-slate-800 text-right whitespace-nowrap align-top">
+        <td class="py-3 px-4 font-mono font-bold text-sm text-slate-800 text-right whitespace-nowrap align-top">
           ${formatINR(adv.originalAmount)}
         </td>
-        <td class="py-3.5 px-4 font-mono font-semibold text-sm text-emerald-700 text-right whitespace-nowrap align-top">
+        <td class="py-3 px-4 font-mono font-semibold text-sm text-emerald-700 text-right whitespace-nowrap align-top">
           ${formatINR(adv.deductedAmount)}
         </td>
-        <td class="py-3.5 px-4 font-mono font-bold text-sm text-amber-700 text-right whitespace-nowrap align-top">
+        <td class="py-3 px-4 font-mono font-bold text-sm text-amber-700 text-right whitespace-nowrap align-top">
           ${formatINR(adv.unpaidBalance)}
         </td>
-        <td class="py-3.5 px-4 text-center whitespace-nowrap align-top">
+        <td class="py-3 px-4 text-center whitespace-nowrap align-top">
           <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full ${getStatusBadgeClass(adv.status)}">
             ${adv.status}
           </span>
-          <div class="mt-2 flex items-center justify-center space-x-1">
+          <div class="mt-1.5 flex items-center justify-center space-x-1">
+            <button onclick="viewFarmerStatement('${adv.farmerId}')" class="text-xs text-emerald-700 hover:text-emerald-900 font-semibold p-1" title="View Full Ledger Statement">
+              Statement
+            </button>
             <button onclick="deleteAdvance('${adv.id}')" class="text-slate-400 hover:text-red-600 p-1 rounded transition" title="Delete Advance">
               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             </button>
@@ -807,7 +675,15 @@ function renderAdvancesLedger() {
   }).join('');
 }
 
-// 3. Bills Ledger View
+// ==========================================
+// 3. BILLS LEDGER VIEW
+// ==========================================
+
+function onBillPageChanged(newPage) {
+  state.pagination.billPage = Math.max(1, newPage);
+  renderBillsLedger();
+}
+
 function renderBillsLedger() {
   populateFarmerDropdown('filter-bill-farmer', state.filters.billFarmer, true);
 
@@ -816,11 +692,15 @@ function renderBillsLedger() {
 
   let list = [...state.bills];
 
+  if (state.selectedYear !== 'all') {
+    list = list.filter(b => String(b.year) === String(state.selectedYear));
+  }
+
   if (state.filters.billFarmer !== 'all') {
-    list = list.filter(b => b.farmerId === state.filters.billFarmer);
+    list = list.filter(b => b.farmerId === state.filters.billFarmer || b.farmerName.toLowerCase() === state.filters.billFarmer.toLowerCase());
   }
   if (state.filters.billCommodity !== 'all') {
-    list = list.filter(b => b.commodity.toLowerCase() === state.filters.billCommodity.toLowerCase());
+    list = list.filter(b => b.commodity.toLowerCase().includes(state.filters.billCommodity.toLowerCase()));
   }
   if (state.filters.billSearch) {
     const s = state.filters.billSearch.toLowerCase();
@@ -834,7 +714,20 @@ function renderBillsLedger() {
 
   list.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  if (list.length === 0) {
+  const totalItems = list.length;
+  const page = state.pagination.billPage;
+  const perPage = state.pagination.billPerPage;
+  const totalPages = Math.ceil(totalItems / perPage) || 1;
+  if (page > totalPages) state.pagination.billPage = totalPages;
+
+  const paginatedList = list.slice((state.pagination.billPage - 1) * perPage, state.pagination.billPage * perPage);
+
+  const paginationContainer = document.getElementById('bills-pagination');
+  if (paginationContainer) {
+    paginationContainer.innerHTML = renderPaginationControls(totalItems, state.pagination.billPage, perPage, 'onBillPageChanged');
+  }
+
+  if (paginatedList.length === 0) {
     container.innerHTML = `
       <tr>
         <td colspan="7" class="py-12 text-center text-slate-400 italic">
@@ -845,64 +738,63 @@ function renderBillsLedger() {
     return;
   }
 
-  container.innerHTML = list.map(bill => {
+  container.innerHTML = paginatedList.map(bill => {
     const deductions = bill.deductions || [];
     const commObj = getAllCommodities().find(c => c.name.toLowerCase() === bill.commodity.toLowerCase()) || { badgeClass: 'commodity-custom' };
 
     const deductionsSummary = deductions.length > 0 ? `
-      <div class="mt-2 pt-2 border-t border-dashed border-slate-200">
+      <div class="mt-1.5 pt-1.5 border-t border-dashed border-slate-200">
         <div class="text-[11px] font-semibold text-slate-600 mb-1">
           Settled Advances (${deductions.length}):
         </div>
-        <div class="flex flex-wrap gap-1.5">
+        <div class="flex flex-wrap gap-1">
           ${deductions.map(d => `
-            <span class="inline-flex items-center text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-mono">
+            <span class="inline-flex items-center text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 font-mono">
               <span class="font-bold text-slate-900 mr-1">${d.advanceNumber}</span>
               <span class="text-emerald-700">(${formatINR(d.amountDeducted)})</span>
             </span>
           `).join('')}
         </div>
       </div>
-    ` : `<div class="text-[11px] text-slate-400 italic mt-1">No advance deductions adjusted in this bill</div>`;
+    ` : '';
 
     return `
       <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
-        <td class="py-3.5 px-4 font-mono font-bold text-xs text-emerald-800 whitespace-nowrap align-top">
+        <td class="py-3 px-4 font-mono font-bold text-xs text-emerald-800 whitespace-nowrap align-top">
           ${bill.billNumber}
+          <div class="text-[10px] text-slate-400 font-mono">${bill.sourceSheet || 'Ledger'}</div>
         </td>
-        <td class="py-3.5 px-4 text-xs text-slate-500 whitespace-nowrap align-top">
+        <td class="py-3 px-4 text-xs text-slate-500 whitespace-nowrap align-top">
           ${formatDate(bill.date)}
         </td>
-        <td class="py-3.5 px-4 align-top">
-          <div class="font-semibold text-sm text-slate-800">${bill.farmerName}</div>
-          <div class="text-xs text-slate-500">${bill.farmerVillage || ''}</div>
+        <td class="py-3 px-4 align-top">
+          <div class="font-semibold text-sm text-slate-900">${bill.farmerName}</div>
+          <div class="text-xs text-slate-500">${bill.farmerVillage || 'Neelahalli Mandi'}</div>
           <div class="mt-1 flex items-center space-x-1.5">
             <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${commObj.badgeClass}">${bill.commodity}</span>
             ${bill.quantity ? `<span class="text-xs text-slate-500 font-mono">${bill.quantity} ${bill.unit || 'Qtl'} @ ${formatINR(bill.rate)}</span>` : ''}
           </div>
+          ${bill.notes ? `<div class="text-xs text-slate-500 italic mt-0.5">${bill.notes}</div>` : ''}
           ${deductionsSummary}
         </td>
-        <td class="py-3.5 px-4 font-mono font-bold text-sm text-slate-800 text-right whitespace-nowrap align-top">
+        <td class="py-3 px-4 font-mono font-bold text-sm text-slate-800 text-right whitespace-nowrap align-top">
           ${formatINR(bill.grossAmount)}
         </td>
-        <td class="py-3.5 px-4 font-mono font-bold text-sm text-amber-700 text-right whitespace-nowrap align-top">
+        <td class="py-3 px-4 font-mono font-bold text-sm text-amber-700 text-right whitespace-nowrap align-top">
           ${formatINR(bill.totalAdvancesDeducted)}
         </td>
-        <td class="py-3.5 px-4 font-mono font-extrabold text-sm text-emerald-700 text-right whitespace-nowrap align-top">
+        <td class="py-3 px-4 font-mono font-extrabold text-sm text-emerald-700 text-right whitespace-nowrap align-top">
           ${formatINR(bill.netPayableCash)}
         </td>
-        <td class="py-3.5 px-4 text-center whitespace-nowrap align-top">
+        <td class="py-3 px-4 text-center whitespace-nowrap align-top">
           <div class="flex items-center justify-center space-x-1.5">
             <button onclick="viewBillReceipt('${bill.id}')" class="inline-flex items-center space-x-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded transition border border-emerald-200">
               <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
               <span>Receipt</span>
             </button>
-            <button onclick="deleteBill('${bill.id}')" class="text-slate-400 hover:text-red-600 p-1 rounded transition" title="Delete Bill & Revert Deductions">
+            <button onclick="deleteBill('${bill.id}')" class="text-slate-400 hover:text-red-600 p-1 rounded transition" title="Delete Bill">
               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             </button>
-          </div>
-          <div class="text-[10px] text-slate-400 mt-1.5 font-mono">
-            Leftover: ${formatINR(bill.leftoverAdvancesCarriedForward || 0)}
           </div>
         </td>
       </tr>
@@ -910,7 +802,15 @@ function renderBillsLedger() {
   }).join('');
 }
 
-// 4. Farmers Directory View
+// ==========================================
+// 4. FARMERS DIRECTORY VIEW
+// ==========================================
+
+function onFarmerPageChanged(newPage) {
+  state.pagination.farmerPage = Math.max(1, newPage);
+  renderFarmersDirectory();
+}
+
 function renderFarmersDirectory() {
   const container = document.getElementById('farmers-grid');
   if (!container) return;
@@ -926,7 +826,23 @@ function renderFarmersDirectory() {
     );
   }
 
-  if (list.length === 0) {
+  // Sort alphabetically
+  list.sort((a, b) => a.name.localeCompare(b.name));
+
+  const totalItems = list.length;
+  const page = state.pagination.farmerPage;
+  const perPage = state.pagination.farmerPerPage;
+  const totalPages = Math.ceil(totalItems / perPage) || 1;
+  if (page > totalPages) state.pagination.farmerPage = totalPages;
+
+  const paginatedList = list.slice((state.pagination.farmerPage - 1) * perPage, state.pagination.farmerPage * perPage);
+
+  const paginationContainer = document.getElementById('farmers-pagination');
+  if (paginationContainer) {
+    paginationContainer.innerHTML = renderPaginationControls(totalItems, state.pagination.farmerPage, perPage, 'onFarmerPageChanged');
+  }
+
+  if (paginatedList.length === 0) {
     container.innerHTML = `
       <div class="col-span-full py-12 text-center text-slate-400 italic">
         No farmers found matching your search.
@@ -935,50 +851,47 @@ function renderFarmersDirectory() {
     return;
   }
 
-  container.innerHTML = list.map(f => {
+  container.innerHTML = paginatedList.map(f => {
     const m = getFarmerMetrics(f.id);
 
     return `
-      <div class="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition p-5 flex flex-col justify-between">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition p-4 flex flex-col justify-between">
         <div>
           <div class="flex items-start justify-between">
             <div>
-              <h3 class="font-bold text-base text-slate-800">${f.name}</h3>
-              <div class="text-xs text-slate-500 flex items-center space-x-2 mt-0.5">
-                <span><i data-lucide="map-pin" class="w-3 h-3 inline text-slate-400"></i> ${f.village || 'Neelahalli'}</span>
-                ${f.phone ? `<span><i data-lucide="phone" class="w-3 h-3 inline text-slate-400"></i> ${f.phone}</span>` : ''}
+              <h3 class="font-bold text-sm text-slate-900">${f.name}</h3>
+              <div class="text-xs text-slate-500 flex items-center space-x-1.5 mt-0.5">
+                <span><i data-lucide="map-pin" class="w-3 h-3 inline text-slate-400"></i> ${f.village || 'Neelahalli Mandi'}</span>
               </div>
             </div>
-            <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-              ${m.billsCount} Bills
+            <span class="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+              ${m.advancesCount} Adv • ${m.billsCount} Bills
             </span>
           </div>
 
-          ${f.notes ? `<p class="text-xs text-slate-500 mt-2 line-clamp-2 italic">"${f.notes}"</p>` : ''}
-
           <!-- Metric Cards -->
-          <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100 text-xs">
+          <div class="grid grid-cols-2 gap-1.5 mt-3 pt-2.5 border-t border-slate-100 text-xs">
             <div class="bg-slate-50 p-2 rounded border border-slate-100">
-              <span class="text-slate-500 text-[11px] block">Total Advances</span>
+              <span class="text-slate-500 text-[10px] block">Advances Given</span>
               <span class="font-mono font-bold text-slate-800">${formatINR(m.totalAdvances)}</span>
             </div>
             <div class="bg-emerald-50/60 p-2 rounded border border-emerald-100">
-              <span class="text-emerald-700 text-[11px] block">Deducted in Bills</span>
+              <span class="text-emerald-700 text-[10px] block">Deducted in Bills</span>
               <span class="font-mono font-bold text-emerald-800">${formatINR(m.totalDeducted)}</span>
             </div>
             <div class="bg-amber-50/60 p-2 rounded border border-amber-100">
-              <span class="text-amber-800 text-[11px] block font-semibold">Unpaid Balance</span>
+              <span class="text-amber-800 text-[10px] block font-semibold">Unpaid Balance</span>
               <span class="font-mono font-bold text-amber-800">${formatINR(m.remainingAdvanceBalance)}</span>
             </div>
             <div class="bg-blue-50/60 p-2 rounded border border-blue-100">
-              <span class="text-blue-700 text-[11px] block">Total Produce Bills</span>
+              <span class="text-blue-700 text-[10px] block">Produce Bills</span>
               <span class="font-mono font-bold text-blue-800">${formatINR(m.totalBillsValue)}</span>
             </div>
           </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-          <button onclick="viewFarmerStatement('${f.id}')" class="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+        <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+          <button onclick="viewFarmerStatement('${f.id}')" class="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
             <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
             <span>Statement & Ledger</span>
           </button>
@@ -996,30 +909,141 @@ function renderFarmersDirectory() {
   }).join('');
 }
 
+// ==========================================
+// 5. DAYBOOK & MANDI EXPENSES VIEW
+// ==========================================
+
+function onExpensePageChanged(newPage) {
+  state.pagination.expensePage = Math.max(1, newPage);
+  renderExpensesLedger();
+}
+
+function onExpenseCategoryChanged(cat) {
+  state.filters.expenseCategory = cat;
+  state.pagination.expensePage = 1;
+  renderExpensesLedger();
+}
+
+function onExpenseSearchChanged(txt) {
+  state.filters.expenseSearch = txt;
+  state.pagination.expensePage = 1;
+  renderExpensesLedger();
+}
+
+function renderExpensesLedger() {
+  const container = document.getElementById('expenses-table-body');
+  if (!container) return;
+
+  let list = [...state.expenses];
+
+  if (state.selectedYear !== 'all') {
+    list = list.filter(e => String(e.year) === String(state.selectedYear));
+  }
+
+  if (state.filters.expenseCategory !== 'all') {
+    list = list.filter(e => (e.category || '').toUpperCase().includes(state.filters.expenseCategory.toUpperCase()));
+  }
+
+  if (state.filters.expenseSearch) {
+    const s = state.filters.expenseSearch.toLowerCase();
+    list = list.filter(e =>
+      (e.category && e.category.toLowerCase().includes(s)) ||
+      (e.partyName && e.partyName.toLowerCase().includes(s)) ||
+      (e.notes && e.notes.toLowerCase().includes(s))
+    );
+  }
+
+  list.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Compute Expense KPI Cards
+  const totalAmt = list.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const hamaliAmt = list.filter(e => (e.category || '').toUpperCase().includes('HAMALI')).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const transAmt = list.filter(e => (e.category || '').toUpperCase().includes('TRANSPORT') || (e.category || '').toUpperCase().includes('DIESEL') || (e.category || '').toUpperCase().includes('FUEL')).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const maintAmt = list.filter(e => (e.category || '').toUpperCase().includes('MAINTAINANCE') || (e.category || '').toUpperCase().includes('RENT') || (e.category || '').toUpperCase().includes('LIGHT')).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+  const elTotal = document.getElementById('exp-total-amount');
+  const elCount = document.getElementById('exp-total-count');
+  const elHamali = document.getElementById('exp-hamali-amount');
+  const elTrans = document.getElementById('exp-transport-amount');
+  const elMaint = document.getElementById('exp-maintenance-amount');
+
+  if (elTotal) elTotal.innerText = formatINR(totalAmt);
+  if (elCount) elCount.innerText = `${list.length} expense entries`;
+  if (elHamali) elHamali.innerText = formatINR(hamaliAmt);
+  if (elTrans) elTrans.innerText = formatINR(transAmt);
+  if (elMaint) elMaint.innerText = formatINR(maintAmt);
+
+  const totalItems = list.length;
+  const page = state.pagination.expensePage;
+  const perPage = state.pagination.expensePerPage;
+  const totalPages = Math.ceil(totalItems / perPage) || 1;
+  if (page > totalPages) state.pagination.expensePage = totalPages;
+
+  const paginatedList = list.slice((state.pagination.expensePage - 1) * perPage, state.pagination.expensePage * perPage);
+
+  const paginationContainer = document.getElementById('expenses-pagination');
+  if (paginationContainer) {
+    paginationContainer.innerHTML = renderPaginationControls(totalItems, state.pagination.expensePage, perPage, 'onExpensePageChanged');
+  }
+
+  if (paginatedList.length === 0) {
+    container.innerHTML = `
+      <tr>
+        <td colspan="5" class="py-12 text-center text-slate-400 italic">
+          No operational expenses found matching your filter criteria.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  container.innerHTML = paginatedList.map(exp => `
+    <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
+      <td class="py-2.5 px-4 font-mono text-xs text-slate-600 whitespace-nowrap">
+        ${formatDate(exp.date)}
+      </td>
+      <td class="py-2.5 px-4">
+        <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
+          ${exp.category}
+        </span>
+      </td>
+      <td class="py-2.5 px-4 text-xs font-medium text-slate-800">
+        ${exp.partyName || 'Mandi Cash Expense'}
+        ${exp.notes ? `<div class="text-[11px] text-slate-400 italic">${exp.notes}</div>` : ''}
+      </td>
+      <td class="py-2.5 px-4 font-mono font-bold text-xs text-slate-900 text-right whitespace-nowrap">
+        ${formatINR(exp.amount)}
+      </td>
+      <td class="py-2.5 px-4 font-mono text-[10px] text-slate-500 whitespace-nowrap">
+        ${exp.sourceSheet || 'Ledger'}
+      </td>
+    </tr>
+  `).join('');
+}
+
 function populateFarmerDropdown(elementId, selectedId = '', includeAllOption = false) {
   const el = document.getElementById(elementId);
   if (!el) return;
 
   let options = '';
   if (includeAllOption) {
-    options += `<option value="all" ${selectedId === 'all' ? 'selected' : ''}>All Farmers</option>`;
+    options += `<option value="all" ${selectedId === 'all' ? 'selected' : ''}>All Farmers (${state.farmers.length})</option>`;
   } else {
     options += `<option value="">-- Select Farmer --</option>`;
   }
 
-  // Sort farmers alphabetically
   const sorted = [...state.farmers].sort((a, b) => a.name.localeCompare(b.name));
 
   sorted.forEach(f => {
     const isSelected = f.id === selectedId || f.name.toLowerCase() === selectedId.toLowerCase() ? 'selected' : '';
-    options += `<option value="${f.id}" ${isSelected}>${f.name} (${f.village || 'NEELAHALLI'})</option>`;
+    options += `<option value="${f.id}" ${isSelected}>${f.name} (${f.village || 'Neelahalli Mandi'})</option>`;
   });
 
   el.innerHTML = options;
 }
 
 // ==========================================
-// ADVANCE & SEEDS & FERTILIZER CREATION
+// RECORD ADVANCE MODAL
 // ==========================================
 
 function openRecordAdvanceModal(preselectedFarmerId = '') {
@@ -1100,31 +1124,33 @@ function handleSaveAdvance(e) {
     }
   }
 
+  const dateVal = document.getElementById('advance-date').value || new Date().toISOString().split('T')[0];
+  const yearVal = dateVal.split('-')[0];
+
   const newAdv = {
     id: 'ADV-' + Date.now(),
     advanceNumber: document.getElementById('advance-number').value.trim() || getNextAdvanceNumber(),
     farmerId: farmer.id,
     farmerName: farmer.name,
-    date: document.getElementById('advance-date').value || new Date().toISOString().split('T')[0],
+    date: dateVal,
     originalAmount: amount,
     deductedAmount: 0,
     unpaidBalance: amount,
     purpose: purpose,
     notes: customNotes,
     status: 'UNPAID',
-    deductionHistory: []
+    deductionHistory: [],
+    year: yearVal,
+    sourceSheet: 'MANUAL ENTRY'
   };
 
-  state.advances.push(newAdv);
+  state.advances.unshift(newAdv);
   saveState();
-
-  // Push back into Paisabhai cashbook
-  pushAdvanceToPaisabhai(newAdv);
 
   closeModal('modal-record-advance');
   renderActiveView();
 
-  showToast(`${purpose === 'Seeds' ? '🌱 Seed' : '💰'} Advance ${newAdv.advanceNumber} (${formatINR(amount)}) recorded for ${farmer.name} & synced with Paisabhai!`);
+  showToast(`${purpose === 'Seeds' ? '🌱 Seed' : '💰'} Advance ${newAdv.advanceNumber} (${formatINR(amount)}) recorded for ${farmer.name}!`);
 }
 
 function deleteAdvance(advanceId) {
@@ -1148,20 +1174,14 @@ function deleteAdvance(advanceId) {
 // BILL & ADVANCE DEDUCTION ENGINE
 // ==========================================
 
-let activeBillDeductions = {};
-
 function openNewBillModal(preselectedFarmerId = '') {
   populateFarmerDropdown('bill-farmer-select', preselectedFarmerId);
 
   document.getElementById('bill-number').value = getNextBillNumber();
   document.getElementById('bill-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('bill-commodity').value = 'Urad (Black Gram)';
-  document.getElementById('bill-custom-commodity').value = '';
-  document.getElementById('bill-custom-commodity-group').classList.add('hidden');
-
+  document.getElementById('bill-gross-amount').value = '';
   document.getElementById('bill-quantity').value = '';
   document.getElementById('bill-rate').value = '';
-  document.getElementById('bill-gross-amount').value = '';
   document.getElementById('bill-notes').value = '';
 
   activeBillDeductions = {};
@@ -1169,28 +1189,16 @@ function openNewBillModal(preselectedFarmerId = '') {
   if (preselectedFarmerId) {
     onBillFarmerSelected(preselectedFarmerId);
   } else {
-    document.getElementById('bill-advances-section').classList.add('hidden');
-    document.getElementById('bill-farmer-summary-banner').classList.add('hidden');
-    updateBillSettlementCalculations();
+    document.getElementById('bill-farmer-outstanding-section').classList.add('hidden');
   }
 
+  updateBillSettlementCalculations();
   openModal('modal-new-bill');
-}
-
-function onBillCommodityChanged() {
-  const sel = document.getElementById('bill-commodity').value;
-  const customGroup = document.getElementById('bill-custom-commodity-group');
-  if (sel === 'CUSTOM') {
-    customGroup.classList.remove('hidden');
-  } else {
-    customGroup.classList.add('hidden');
-  }
 }
 
 function onBillFarmerSelected(farmerId) {
   if (!farmerId) {
-    document.getElementById('bill-advances-section').classList.add('hidden');
-    document.getElementById('bill-farmer-summary-banner').classList.add('hidden');
+    document.getElementById('bill-farmer-outstanding-section').classList.add('hidden');
     activeBillDeductions = {};
     updateBillSettlementCalculations();
     return;
@@ -1199,154 +1207,65 @@ function onBillFarmerSelected(farmerId) {
   const farmer = getFarmerById(farmerId);
   const metrics = getFarmerMetrics(farmerId);
 
-  // Check for inward produce lots in Stock Tracker
-  let stockLots = [];
-  try {
-    const rawStock = localStorage.getItem(STOCK_TRACKER_STORAGE_KEY);
-    if (rawStock) {
-      const parsedStock = JSON.parse(rawStock);
-      if (parsedStock && parsedStock.inwardLots) {
-        stockLots = parsedStock.inwardLots.filter(l =>
-          (l.farmerId || '').toLowerCase() === (farmer.id || '').toLowerCase() ||
-          (l.farmerName || '').toLowerCase() === (farmer.name || '').toLowerCase()
-        );
-      }
-    }
-  } catch (e) {}
+  const section = document.getElementById('bill-farmer-outstanding-section');
+  section.classList.remove('hidden');
 
-  const banner = document.getElementById('bill-farmer-summary-banner');
-  banner.classList.remove('hidden');
+  document.getElementById('bill-farmer-total-outstanding').innerText = formatINR(metrics.remainingAdvanceBalance);
 
-  let stockLotsHtml = '';
-  if (stockLots.length > 0) {
-    stockLotsHtml = `
-      <div class="pt-2 border-t border-slate-200 mt-2">
-        <div class="text-[11px] font-bold text-amber-900 mb-1 flex items-center justify-between">
-          <span>📦 Inward Produce Recorded in Stock Tracker (${stockLots.length} Lots):</span>
-          <span class="text-[10px] text-amber-700">Click to Auto-fill</span>
-        </div>
-        <div class="flex flex-wrap gap-1.5">
-          ${stockLots.map(l => `
-            <button type="button" onclick="autoFillProduceFromStockTracker('${l.lotId}', ${l.unweighedBags})" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-900 font-mono px-2 py-1 rounded border border-amber-300 transition">
-              Lot ${l.lotId}: ${l.unweighedBags} Bags • ${l.status || 'Received'}
-            </button>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  banner.innerHTML = `
-    <div class="flex flex-wrap items-center justify-between text-xs gap-2">
-      <div>
-        <span class="font-bold text-slate-800 text-sm">${farmer.name}</span>
-        <span class="text-slate-500 ml-1">(${farmer.village || 'Neelahalli'})</span>
-      </div>
-      <div class="flex items-center space-x-3 font-mono">
-        <div>
-          <span class="text-slate-500">Unpaid Advances:</span>
-          <span class="font-bold text-amber-700 ml-1 text-sm">${formatINR(metrics.remainingAdvanceBalance)}</span>
-        </div>
-        ${metrics.totalSeedsValue > 0 ? `
-          <div>
-            <span class="text-slate-500">Seeds Value:</span>
-            <span class="font-bold text-emerald-700 ml-1">🌱 ${formatINR(metrics.totalSeedsValue)}</span>
-          </div>
-        ` : ''}
-      </div>
-    </div>
-    ${stockLotsHtml}
-  `;
-
-  // Filter outstanding advances for this farmer (Seeds, Cash, Fertilizer)
   const outstandingAdvances = state.advances
     .filter(a => a.farmerId === farmerId && a.status !== 'PAID' && a.unpaidBalance > 0)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  activeBillDeductions = {};
   renderBillOutstandingAdvances(outstandingAdvances);
   updateBillSettlementCalculations();
 }
 
-function autoFillProduceFromStockTracker(lotId, bags) {
-  document.getElementById('bill-commodity').value = 'Urad (Black Gram)';
-  document.getElementById('bill-quantity').value = bags;
-  document.getElementById('bill-unit').value = 'Bags (50kg)';
-  document.getElementById('bill-rate').value = 3800; // standard approx rate per bag
-  document.getElementById('bill-gross-amount').value = bags * 3800;
-  document.getElementById('bill-notes').value = `Harvest produce returned from Stock Tracker Lot ${lotId} (${bags} bags)`;
-  updateBillSettlementCalculations();
-  showToast(`Auto-filled produce return from Stock Tracker Lot ${lotId}: ${bags} Bags!`);
-}
-
 function renderBillOutstandingAdvances(advances) {
-  const section = document.getElementById('bill-advances-section');
-  const container = document.getElementById('bill-advances-list');
-
-  section.classList.remove('hidden');
+  const container = document.getElementById('bill-outstanding-advances-list');
+  if (!container) return;
 
   if (advances.length === 0) {
     container.innerHTML = `
-      <div class="py-4 text-center text-slate-400 text-xs italic bg-slate-50 rounded-lg border border-slate-200">
-        No outstanding unpaid advances found for this farmer. All previous advances are fully settled!
+      <div class="py-4 text-center text-xs text-slate-400 italic bg-slate-50 rounded-lg border border-slate-200">
+        No outstanding advances found for this farmer. Bill will be paid 100% in cash.
       </div>
     `;
     return;
   }
 
   container.innerHTML = advances.map(adv => {
-    const currentDeduction = activeBillDeductions[adv.id] || 0;
-    const isChecked = currentDeduction > 0;
-    const pIcon = adv.purpose === 'Seeds' ? '🌱' : (adv.purpose === 'Fertilizer & Pesticide' ? '🧪' : '💵');
+    const isChecked = !!activeBillDeductions[adv.id];
+    const deductVal = activeBillDeductions[adv.id] !== undefined ? activeBillDeductions[adv.id] : '';
 
     return `
-      <div class="p-3 bg-white rounded-lg border border-slate-200 hover:border-emerald-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3" id="adv-row-${adv.id}">
-        <div class="flex items-start space-x-3">
-          <input type="checkbox" id="check-${adv.id}" onchange="toggleAdvanceCheckbox('${adv.id}', ${adv.unpaidBalance})" ${isChecked ? 'checked' : ''} class="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded cursor-pointer">
+      <div class="p-2.5 rounded-lg border border-slate-200 bg-white hover:border-emerald-300 transition flex items-center justify-between text-xs gap-2">
+        <div class="flex items-center space-x-2.5">
+          <input type="checkbox" id="check-${adv.id}" onchange="toggleAdvanceCheckbox('${adv.id}', ${adv.unpaidBalance})" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
           <div>
-            <div class="flex items-center space-x-2">
-              <span class="font-mono font-bold text-xs text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">${adv.advanceNumber}</span>
-              <span class="text-xs font-semibold text-slate-700">${pIcon} ${adv.purpose}</span>
-              <span class="text-[10px] font-semibold px-2 py-0.2 rounded-full ${getStatusBadgeClass(adv.status)}">${adv.status}</span>
+            <div class="flex items-center space-x-1.5">
+              <span class="font-mono font-bold text-slate-800">${adv.advanceNumber}</span>
+              <span class="text-[11px] font-semibold px-1.5 py-0.2 rounded ${getPurposeBadgeClass(adv.purpose)}">${adv.purpose}</span>
+              <span class="text-slate-400 text-[10px]">(${formatDate(adv.date)})</span>
             </div>
             <div class="text-[11px] text-slate-500 mt-0.5">
-              Issued: ${formatDate(adv.date)} • Original: <span class="font-mono font-medium">${formatINR(adv.originalAmount)}</span>
-              ${adv.deductedAmount > 0 ? ` • Already Paid: <span class="font-mono text-emerald-700">${formatINR(adv.deductedAmount)}</span>` : ''}
+              Original: <span class="font-mono">${formatINR(adv.originalAmount)}</span> •
+              Unpaid Bal: <strong class="font-mono text-amber-800">${formatINR(adv.unpaidBalance)}</strong>
             </div>
-            ${adv.notes ? `<div class="text-[11px] text-slate-500 italic">"${adv.notes}"</div>` : ''}
           </div>
         </div>
 
-        <div class="flex items-center space-x-2 sm:self-center">
-          <div class="text-right">
-            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Unpaid Balance</span>
-            <span class="font-mono font-bold text-sm text-amber-700">${formatINR(adv.unpaidBalance)}</span>
+        <div class="flex items-center space-x-1.5">
+          <div class="relative">
+            <span class="absolute left-2 top-1 text-slate-400 text-xs">₹</span>
+            <input type="number" id="input-deduct-${adv.id}" min="0" max="${adv.unpaidBalance}" step="any" value="${deductVal}" oninput="onAdvanceDeductInput('${adv.id}', ${adv.unpaidBalance})" placeholder="0" class="w-24 pl-5 pr-1 py-1 text-xs font-mono font-bold border border-slate-300 rounded text-right focus:ring-1 focus:ring-emerald-500">
           </div>
-
-          <div class="flex items-center space-x-1 pl-3 border-l border-slate-200">
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-xs text-slate-400 font-mono">₹</span>
-              <input type="number" id="input-deduct-${adv.id}" value="${currentDeduction > 0 ? currentDeduction : ''}" placeholder="0" min="0" max="${adv.unpaidBalance}" oninput="onAdvanceDeductInput('${adv.id}', ${adv.unpaidBalance})" class="w-28 pl-6 pr-2 py-1 text-right text-xs font-mono font-bold border border-slate-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
-            </div>
-            <button type="button" onclick="setFullAdvanceDeduction('${adv.id}', ${adv.unpaidBalance})" class="px-2 py-1 text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200" title="Deduct entire balance of this advance">
-              Max
-            </button>
-          </div>
+          <button type="button" onclick="setFullAdvanceDeduction('${adv.id}', ${adv.unpaidBalance})" class="px-2 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200" title="Deduct entire balance">
+            Full
+          </button>
         </div>
       </div>
     `;
   }).join('');
-}
-
-function calculateBillGrossFromQtyRate() {
-  const qty = parseFloat(document.getElementById('bill-quantity').value);
-  const rate = parseFloat(document.getElementById('bill-rate').value);
-
-  if (!isNaN(qty) && !isNaN(rate) && qty > 0 && rate > 0) {
-    const gross = Math.round(qty * rate);
-    document.getElementById('bill-gross-amount').value = gross;
-  }
-  updateBillSettlementCalculations();
 }
 
 function onAdvanceDeductInput(advanceId, maxBalance) {
@@ -1626,10 +1545,12 @@ function handleSaveBill(e) {
     leftoverAdvancesCarriedForward: farmerRemainingAdvances,
     deductions: deductions,
     notes: notes,
+    year: billDate.split('-')[0],
+    sourceSheet: 'MANUAL ENTRY',
     createdAt: new Date().toISOString()
   };
 
-  state.bills.push(newBill);
+  state.bills.unshift(newBill);
   saveState();
   closeModal('modal-new-bill');
   renderActiveView();
@@ -1680,23 +1601,20 @@ function viewBillReceipt(billId) {
 
   container.innerHTML = `
     <div class="print-area bg-white p-6 max-w-xl mx-auto border border-slate-200 rounded-xl shadow-sm text-slate-800">
-      <!-- Receipt Header -->
       <div class="text-center pb-4 border-b-2 border-emerald-800">
         <h2 class="text-xl font-extrabold text-emerald-900 tracking-wide uppercase">GURURAJ TRADING COMPANY (GTCO)</h2>
         <div class="text-xs text-slate-600 font-medium">Agricultural Pulse & Grain Merchant • APMC Mandi</div>
-        <div class="text-[11px] text-slate-500 mt-0.5">Mandi Yard, Shop No. 14, Main Road • Phone: +91 94481 00000</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">Mandi Yard, Neelahalli • Phone: +91 94481 00000</div>
         <div class="mt-2 inline-block px-3 py-0.5 bg-emerald-100 text-emerald-900 text-xs font-bold rounded-full">
           COMMODITY PURCHASE & ADVANCE SETTLEMENT BILL
         </div>
       </div>
 
-      <!-- Bill & Farmer Meta -->
       <div class="grid grid-cols-2 gap-4 my-4 text-xs">
         <div>
           <div class="text-slate-500 font-medium">Farmer Details:</div>
           <div class="font-bold text-sm text-slate-900">${bill.farmerName}</div>
-          <div>Village: <span class="font-medium">${bill.farmerVillage || (farmer ? farmer.village : 'Neelahalli')}</span></div>
-          <div>Phone: <span class="font-medium">${farmer ? farmer.phone : 'N/A'}</span></div>
+          <div>Village: <span class="font-medium">${bill.farmerVillage || (farmer ? farmer.village : 'Neelahalli Mandi')}</span></div>
         </div>
         <div class="text-right">
           <div>Bill Number: <span class="font-mono font-bold text-sm text-emerald-800">${bill.billNumber}</span></div>
@@ -1705,11 +1623,10 @@ function viewBillReceipt(billId) {
         </div>
       </div>
 
-      <!-- Commodity Table -->
       <table class="w-full text-xs border border-slate-200 mb-4">
         <thead class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
           <tr>
-            <th class="py-2 px-3 text-left">Commodity Return</th>
+            <th class="py-2 px-3 text-left">Commodity Produce</th>
             <th class="py-2 px-3 text-right">Quantity</th>
             <th class="py-2 px-3 text-right">Rate / Unit</th>
             <th class="py-2 px-3 text-right">Gross Value</th>
@@ -1725,10 +1642,9 @@ function viewBillReceipt(billId) {
         </tbody>
       </table>
 
-      <!-- Advances Deducted Breakdown -->
       <div class="mb-4">
         <div class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-          <span>Advance Deductions (Cash, Seeds & Fert) Settled in this Bill:</span>
+          <span>Advance Deductions Settled in this Bill:</span>
           <span class="text-emerald-800 font-mono">${formatINR(bill.totalAdvancesDeducted)}</span>
         </div>
         ${deductions.length > 0 ? `
@@ -1746,7 +1662,7 @@ function viewBillReceipt(billId) {
               ${deductions.map(d => `
                 <tr>
                   <td class="py-1.5 px-2 font-mono font-semibold">${d.advanceNumber}</td>
-                  <td class="py-1.5 px-2 text-slate-700 font-medium">${d.advancePurpose === 'Seeds' ? '🌱 Seeds' : d.advancePurpose}</td>
+                  <td class="py-1.5 px-2 text-slate-700 font-medium">${d.advancePurpose}</td>
                   <td class="py-1.5 px-2 font-mono text-right">${formatINR(d.advanceOriginalAmount)}</td>
                   <td class="py-1.5 px-2 font-mono text-right font-bold text-emerald-800">${formatINR(d.amountDeducted)}</td>
                   <td class="py-1.5 px-2 font-mono text-right text-amber-700">${formatINR(d.advanceRemainingBalanceAfter)}</td>
@@ -1761,7 +1677,6 @@ function viewBillReceipt(billId) {
         `}
       </div>
 
-      <!-- Financial Summary Box -->
       <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1.5 text-xs mb-4">
         <div class="flex justify-between">
           <span class="text-slate-600">Gross Commodity Sale Value:</span>
@@ -1783,7 +1698,6 @@ function viewBillReceipt(billId) {
 
       ${bill.notes ? `<div class="text-[11px] text-slate-500 italic mb-4">Note: "${bill.notes}"</div>` : ''}
 
-      <!-- Signature block -->
       <div class="grid grid-cols-2 gap-8 pt-8 mt-4 border-t border-slate-200 text-xs text-center">
         <div>
           <div class="h-10 border-b border-dashed border-slate-400"></div>
@@ -1806,9 +1720,9 @@ function viewFarmerStatement(farmerId) {
   const farmer = getFarmerById(farmerId);
   if (!farmer) return;
 
-  const metrics = getFarmerMetrics(farmerId);
-  const advances = state.advances.filter(a => a.farmerId === farmerId).sort((a, b) => new Date(a.date) - new Date(b.date));
-  const bills = state.bills.filter(b => b.farmerId === farmerId).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const metrics = getFarmerMetrics(farmer.id);
+  const advances = state.advances.filter(a => a.farmerId === farmer.id).sort((a, b) => new Date(b.date) - new Date(a.date));
+  const bills = state.bills.filter(b => b.farmerId === farmer.id).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const container = document.getElementById('farmer-statement-content');
   if (!container) return;
@@ -1827,8 +1741,7 @@ function viewFarmerStatement(farmerId) {
         <div>
           <div class="text-slate-500 font-medium">Farmer Name:</div>
           <div class="font-bold text-sm text-slate-900">${farmer.name}</div>
-          <div>Village: <span class="font-medium">${farmer.village || 'Neelahalli'}</span></div>
-          <div>Phone: <span class="font-medium">${farmer.phone || 'N/A'}</span></div>
+          <div>Village: <span class="font-medium">${farmer.village || 'Neelahalli Mandi'}</span></div>
         </div>
         <div class="text-right">
           <div>Statement Date: <span class="font-medium">${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
@@ -1862,34 +1775,36 @@ function viewFarmerStatement(farmerId) {
           <span>Advances Taken by Farmer (Cash, Seeds & Fertilizer):</span>
           <span class="text-slate-500 font-normal">Count: ${advances.length}</span>
         </h4>
-        <table class="w-full text-xs border border-slate-200">
-          <thead class="bg-slate-100 text-slate-700">
-            <tr>
-              <th class="py-1.5 px-2 text-left">Adv #</th>
-              <th class="py-1.5 px-2 text-left">Date</th>
-              <th class="py-1.5 px-2 text-left">Purpose / Item</th>
-              <th class="py-1.5 px-2 text-right">Original</th>
-              <th class="py-1.5 px-2 text-right">Deducted</th>
-              <th class="py-1.5 px-2 text-right">Balance</th>
-              <th class="py-1.5 px-2 text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            ${advances.map(a => `
+        <div class="overflow-x-auto max-h-64 border border-slate-200 rounded">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-100 text-slate-700 sticky top-0">
               <tr>
-                <td class="py-1.5 px-2 font-mono font-semibold">${a.advanceNumber}</td>
-                <td class="py-1.5 px-2 text-slate-500">${formatDate(a.date)}</td>
-                <td class="py-1.5 px-2 text-slate-700">${a.purpose === 'Seeds' ? '🌱 Seeds' : a.purpose}</td>
-                <td class="py-1.5 px-2 font-mono text-right font-medium">${formatINR(a.originalAmount)}</td>
-                <td class="py-1.5 px-2 font-mono text-right text-emerald-700">${formatINR(a.deductedAmount)}</td>
-                <td class="py-1.5 px-2 font-mono text-right font-bold text-amber-800">${formatINR(a.unpaidBalance)}</td>
-                <td class="py-1.5 px-2 text-center">
-                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getStatusBadgeClass(a.status)}">${a.status}</span>
-                </td>
+                <th class="py-1.5 px-2 text-left">Adv #</th>
+                <th class="py-1.5 px-2 text-left">Date</th>
+                <th class="py-1.5 px-2 text-left">Purpose / Item</th>
+                <th class="py-1.5 px-2 text-right">Original</th>
+                <th class="py-1.5 px-2 text-right">Deducted</th>
+                <th class="py-1.5 px-2 text-right">Balance</th>
+                <th class="py-1.5 px-2 text-center">Status</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              ${advances.map(a => `
+                <tr>
+                  <td class="py-1.5 px-2 font-mono font-semibold">${a.advanceNumber}</td>
+                  <td class="py-1.5 px-2 text-slate-500">${formatDate(a.date)}</td>
+                  <td class="py-1.5 px-2 text-slate-700">${a.purpose}</td>
+                  <td class="py-1.5 px-2 font-mono text-right font-medium">${formatINR(a.originalAmount)}</td>
+                  <td class="py-1.5 px-2 font-mono text-right text-emerald-700">${formatINR(a.deductedAmount)}</td>
+                  <td class="py-1.5 px-2 font-mono text-right font-bold text-amber-800">${formatINR(a.unpaidBalance)}</td>
+                  <td class="py-1.5 px-2 text-center">
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getStatusBadgeClass(a.status)}">${a.status}</span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Bills Table -->
@@ -1899,30 +1814,32 @@ function viewFarmerStatement(farmerId) {
           <span class="text-slate-500 font-normal">Count: ${bills.length}</span>
         </h4>
         ${bills.length > 0 ? `
-          <table class="w-full text-xs border border-slate-200">
-            <thead class="bg-slate-100 text-slate-700">
-              <tr>
-                <th class="py-1.5 px-2 text-left">Bill #</th>
-                <th class="py-1.5 px-2 text-left">Date</th>
-                <th class="py-1.5 px-2 text-left">Commodity</th>
-                <th class="py-1.5 px-2 text-right">Gross Value</th>
-                <th class="py-1.5 px-2 text-right">Advances Deducted</th>
-                <th class="py-1.5 px-2 text-right">Net Cash Paid</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              ${bills.map(b => `
+          <div class="overflow-x-auto max-h-48 border border-slate-200 rounded">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-100 text-slate-700 sticky top-0">
                 <tr>
-                  <td class="py-1.5 px-2 font-mono font-bold text-emerald-800">${b.billNumber}</td>
-                  <td class="py-1.5 px-2 text-slate-500">${formatDate(b.date)}</td>
-                  <td class="py-1.5 px-2 font-medium">${b.commodity}</td>
-                  <td class="py-1.5 px-2 font-mono text-right">${formatINR(b.grossAmount)}</td>
-                  <td class="py-1.5 px-2 font-mono text-right text-amber-700 font-medium">${formatINR(b.totalAdvancesDeducted)}</td>
-                  <td class="py-1.5 px-2 font-mono text-right text-emerald-800 font-bold">${formatINR(b.netPayableCash)}</td>
+                  <th class="py-1.5 px-2 text-left">Bill #</th>
+                  <th class="py-1.5 px-2 text-left">Date</th>
+                  <th class="py-1.5 px-2 text-left">Commodity</th>
+                  <th class="py-1.5 px-2 text-right">Gross Value</th>
+                  <th class="py-1.5 px-2 text-right">Advances Deducted</th>
+                  <th class="py-1.5 px-2 text-right">Net Cash Paid</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${bills.map(b => `
+                  <tr>
+                    <td class="py-1.5 px-2 font-mono font-bold text-emerald-800">${b.billNumber}</td>
+                    <td class="py-1.5 px-2 text-slate-500">${formatDate(b.date)}</td>
+                    <td class="py-1.5 px-2 font-medium">${b.commodity}</td>
+                    <td class="py-1.5 px-2 font-mono text-right">${formatINR(b.grossAmount)}</td>
+                    <td class="py-1.5 px-2 font-mono text-right text-amber-700 font-medium">${formatINR(b.totalAdvancesDeducted)}</td>
+                    <td class="py-1.5 px-2 font-mono text-right text-emerald-800 font-bold">${formatINR(b.netPayableCash)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
         ` : `
           <div class="text-xs text-slate-400 italic p-3 bg-slate-50 border border-slate-200 rounded text-center">
             No commodity sales recorded for this farmer yet.
@@ -1937,7 +1854,7 @@ function viewFarmerStatement(farmerId) {
           <span>Outstanding Advance Carryover Note:</span>
         </div>
         <p class="text-amber-800 mt-1">
-          As of today, farmer <span class="font-bold">${farmer.name}</span> has a remaining unpaid advance balance of <span class="font-mono font-bold text-amber-900">${formatINR(metrics.remainingAdvanceBalance)}</span>. This balance carries forward and will be deducted when future crops (Tur, Moong, Chana, Urad, etc.) are brought for sale.
+          As of today, farmer <span class="font-bold">${farmer.name}</span> has an outstanding advance balance of <span class="font-mono font-bold text-amber-900">${formatINR(metrics.remainingAdvanceBalance)}</span>. This balance carries forward and will be deducted when future crops (Tur, Moong, Chana, Urad, etc.) are brought for sale.
         </p>
       </div>
 
@@ -2019,8 +1936,9 @@ function handleSaveFarmer(e) {
       showToast(`Farmer ${name} updated!`);
     }
   } else {
+    const code = name.replace(/[^A-Z0-9]/g, '').slice(0, 8);
     const newFarmer = {
-      id: 'FARMER-' + Date.now(),
+      id: `FARMER-${code}-${Date.now()}`,
       name: name,
       phone: phone,
       village: village,
@@ -2044,7 +1962,7 @@ function deleteFarmer(farmerId) {
   const billCount = state.bills.filter(b => b.farmerId === farmerId).length;
 
   if (advCount > 0 || billCount > 0) {
-    alert(`Cannot delete ${farmer.name} because they have ${advCount} advance(s) and ${billCount} bill(s) recorded. Please delete the transactions first.`);
+    alert(`Cannot delete ${farmer.name} because they have ${advCount} advance(s) and ${billCount} bill(s) recorded in the ledger. Please settle or delete transactions first.`);
     return;
   }
 
@@ -2057,39 +1975,17 @@ function deleteFarmer(farmerId) {
 }
 
 // ==========================================
-// SCENARIO SWITCHER & BACKUP
+// EXCEL EXPORT & BACKUP
 // ==========================================
-
-function loadReferenceScenario(settled = true) {
-  state.farmers = INITIAL_MANDI_FARMERS;
-
-  if (settled) {
-    state.advances = getInitialSeedAdvances();
-    state.bills = getInitialSeedBills();
-    showToast('Loaded Settled Reference Scenario (Bill #101 Moong ₹50k with ₹16k carryover)');
-  } else {
-    state.advances = [
-      { id: 'ADV-001', advanceNumber: 'ADV-001', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-08-10', originalAmount: 1000, deductedAmount: 0, unpaidBalance: 1000, purpose: 'Cultivation', notes: 'Initial Cultivation Advance', status: 'UNPAID', deductionHistory: [] },
-      { id: 'ADV-002', advanceNumber: 'ADV-002', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-09-05', originalAmount: 5000, deductedAmount: 0, unpaidBalance: 5000, purpose: 'Harvesting', notes: 'Harvesting Expenses', status: 'UNPAID', deductionHistory: [] },
-      { id: 'ADV-003', advanceNumber: 'ADV-003', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-09-25', originalAmount: 10000, deductedAmount: 0, unpaidBalance: 10000, purpose: 'Fertilizer & Pesticide', notes: 'Fertilizer & pesticide spray', status: 'UNPAID', deductionHistory: [] },
-      { id: 'ADV-004', advanceNumber: 'ADV-004', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-10-15', originalAmount: 50000, deductedAmount: 0, unpaidBalance: 50000, purpose: 'Personal Use', notes: 'Emergency personal cash', status: 'UNPAID', deductionHistory: [] }
-    ];
-    state.bills = [];
-    showToast('Loaded Pre-Bill State (4 advances totaling ₹66,000 ready to settle)');
-  }
-
-  saveState();
-  syncWithPaisabhai(false);
-  renderActiveView();
-}
 
 function exportDataJSON() {
   const jsonStr = JSON.stringify({
-    version: '2.1',
+    version: '4.0',
     exportDate: new Date().toISOString(),
     farmers: state.farmers,
     advances: state.advances,
     bills: state.bills,
+    expenses: state.expenses,
     customCommodities: state.customCommodities
   }, null, 2);
 
@@ -2116,6 +2012,7 @@ function importDataJSON(e) {
       state.farmers = parsed.farmers || [];
       state.advances = parsed.advances || [];
       state.bills = parsed.bills || [];
+      state.expenses = parsed.expenses || [];
       state.customCommodities = parsed.customCommodities || [];
 
       saveState();
@@ -2140,14 +2037,15 @@ function exportExcelLedger() {
   const advData = state.advances.map(a => ({
     'Advance ID': a.advanceNumber,
     'Date': a.date,
+    'Year': a.year || '',
     'Farmer Name': a.farmerName,
     'Purpose / Input': a.purpose,
     'Original Amount (INR)': a.originalAmount,
     'Deducted Amount (INR)': a.deductedAmount,
     'Unpaid Balance (INR)': a.unpaidBalance,
     'Status': a.status,
-    'Notes / Details': a.notes || '',
-    'Deduction History': (a.deductionHistory || []).map(h => `${h.billNumber} (${h.commodity}: ₹${h.amountDeducted})`).join('; ')
+    'Source Sheet': a.sourceSheet || '',
+    'Notes / Details': a.notes || ''
   }));
   const wsAdv = XLSX.utils.json_to_sheet(advData);
   XLSX.utils.book_append_sheet(wb, wsAdv, 'Advances & Inputs');
@@ -2156,18 +2054,17 @@ function exportExcelLedger() {
   const billData = state.bills.map(b => ({
     'Bill ID': b.billNumber,
     'Date': b.date,
+    'Year': b.year || '',
     'Farmer Name': b.farmerName,
     'Commodity': b.commodity,
-    'Quantity': b.quantity || '',
-    'Unit': b.unit || '',
-    'Rate': b.rate || '',
     'Gross Amount (INR)': b.grossAmount,
     'Advances Deducted (INR)': b.totalAdvancesDeducted,
     'Net Cash Paid (INR)': b.netPayableCash,
-    'Leftover Carryover (INR)': b.leftoverAdvancesCarriedForward || 0
+    'Source Sheet': b.sourceSheet || '',
+    'Notes': b.notes || ''
   }));
   const wsBills = XLSX.utils.json_to_sheet(billData);
-  XLSX.utils.book_append_sheet(wb, wsBills, 'Produce Bills');
+  XLSX.utils.book_append_sheet(wb, wsBills, 'Produce Bills & Pattis');
 
   // 3. Farmers Summary Sheet
   const farmerData = state.farmers.map(f => {
@@ -2175,17 +2072,29 @@ function exportExcelLedger() {
     return {
       'Farmer Name': f.name,
       'Village': f.village,
-      'Phone': f.phone,
-      'Total Advances (INR)': m.totalAdvances,
-      'Total Deducted (INR)': m.totalDeducted,
-      'Remaining Balance (INR)': m.remainingAdvanceBalance,
+      'Total Advances Given (INR)': m.totalAdvances,
+      'Total Deducted in Bills (INR)': m.totalDeducted,
+      'Unpaid Balance (INR)': m.remainingAdvanceBalance,
       'Total Produce Bills (INR)': m.totalBillsValue
     };
   });
   const wsFarmers = XLSX.utils.json_to_sheet(farmerData);
   XLSX.utils.book_append_sheet(wb, wsFarmers, 'Farmer Ledgers');
 
-  XLSX.writeFile(wb, `GTCO_LEDGER_EXCEL_${new Date().toISOString().split('T')[0]}.xlsx`);
+  // 4. Expenses Sheet
+  const expData = state.expenses.map(e => ({
+    'Date': e.date,
+    'Year': e.year || '',
+    'Category': e.category,
+    'Party / Description': e.partyName,
+    'Amount (INR)': e.amount,
+    'Source Sheet': e.sourceSheet || '',
+    'Notes': e.notes || ''
+  }));
+  const wsExp = XLSX.utils.json_to_sheet(expData);
+  XLSX.utils.book_append_sheet(wb, wsExp, 'Mandi Expenses & Hamali');
+
+  XLSX.writeFile(wb, `GTCO_MASTER_LEDGER_${new Date().toISOString().split('T')[0]}.xlsx`);
   showToast('Excel report generated and downloaded!');
 }
 
@@ -2224,16 +2133,61 @@ document.addEventListener('DOMContentLoaded', () => {
   const billDate = document.getElementById('bill-date');
   if (billDate) billDate.value = today;
 
-  // Listen to cross-tab storage changes from Paisabhai or Stock Tracker
-  window.addEventListener('storage', (e) => {
-    if (e.key === PAISABHAI_STORAGE_KEY || e.key === STOCK_TRACKER_STORAGE_KEY) {
-      syncAllEcosystemData(false);
-    }
+  // Filter change listeners
+  const filterAdvFarmer = document.getElementById('filter-advance-farmer');
+  if (filterAdvFarmer) filterAdvFarmer.addEventListener('change', (e) => {
+    state.filters.advanceFarmer = e.target.value;
+    state.pagination.advancePage = 1;
+    renderAdvancesLedger();
   });
 
-  window.addEventListener('gtco_ledger_updated', () => {
-    loadState();
-    renderActiveView();
+  const filterAdvPurpose = document.getElementById('filter-advance-purpose');
+  if (filterAdvPurpose) filterAdvPurpose.addEventListener('change', (e) => {
+    state.filters.advancePurpose = e.target.value;
+    state.pagination.advancePage = 1;
+    renderAdvancesLedger();
+  });
+
+  const filterAdvStatus = document.getElementById('filter-advance-status');
+  if (filterAdvStatus) filterAdvStatus.addEventListener('change', (e) => {
+    state.filters.advanceStatus = e.target.value;
+    state.pagination.advancePage = 1;
+    renderAdvancesLedger();
+  });
+
+  const filterAdvSearch = document.getElementById('filter-advance-search');
+  if (filterAdvSearch) filterAdvSearch.addEventListener('input', (e) => {
+    state.filters.advanceSearch = e.target.value;
+    state.pagination.advancePage = 1;
+    renderAdvancesLedger();
+  });
+
+  const filterBillFarmer = document.getElementById('filter-bill-farmer');
+  if (filterBillFarmer) filterBillFarmer.addEventListener('change', (e) => {
+    state.filters.billFarmer = e.target.value;
+    state.pagination.billPage = 1;
+    renderBillsLedger();
+  });
+
+  const filterBillComm = document.getElementById('filter-bill-commodity');
+  if (filterBillComm) filterBillComm.addEventListener('change', (e) => {
+    state.filters.billCommodity = e.target.value;
+    state.pagination.billPage = 1;
+    renderBillsLedger();
+  });
+
+  const filterBillSearch = document.getElementById('filter-bill-search');
+  if (filterBillSearch) filterBillSearch.addEventListener('input', (e) => {
+    state.filters.billSearch = e.target.value;
+    state.pagination.billPage = 1;
+    renderBillsLedger();
+  });
+
+  const filterFarmerSearch = document.getElementById('filter-farmer-search');
+  if (filterFarmerSearch) filterFarmerSearch.addEventListener('input', (e) => {
+    state.filters.farmerSearch = e.target.value;
+    state.pagination.farmerPage = 1;
+    renderFarmersDirectory();
   });
 
   // URL query parameter deep linking: ?farmer=...
@@ -2249,80 +2203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(`Filtered for farmer: ${match.name}`);
       }
     }
-  } catch (e) {}
-
-  // Filter Listeners
-  const filterAdvFarmer = document.getElementById('filter-advance-farmer');
-  if (filterAdvFarmer) {
-    filterAdvFarmer.addEventListener('change', (e) => {
-      state.filters.advanceFarmer = e.target.value;
-      renderAdvancesLedger();
-      if (window.lucide) window.lucide.createIcons();
-    });
+  } catch (e) {
+    console.warn('URL param error:', e);
   }
-
-  const filterAdvPurpose = document.getElementById('filter-advance-purpose');
-  if (filterAdvPurpose) {
-    filterAdvPurpose.addEventListener('change', (e) => {
-      state.filters.advancePurpose = e.target.value;
-      renderAdvancesLedger();
-      if (window.lucide) window.lucide.createIcons();
-    });
-  }
-
-  const filterAdvStatus = document.getElementById('filter-advance-status');
-  if (filterAdvStatus) {
-    filterAdvStatus.addEventListener('change', (e) => {
-      state.filters.advanceStatus = e.target.value;
-      renderAdvancesLedger();
-      if (window.lucide) window.lucide.createIcons();
-    });
-  }
-
-  const filterAdvSearch = document.getElementById('filter-advance-search');
-  if (filterAdvSearch) {
-    filterAdvSearch.addEventListener('input', (e) => {
-      state.filters.advanceSearch = e.target.value;
-      renderAdvancesLedger();
-      if (window.lucide) window.lucide.createIcons();
-    });
-  }
-
-  const filterBillFarmer = document.getElementById('filter-bill-farmer');
-  if (filterBillFarmer) {
-    filterBillFarmer.addEventListener('change', (e) => {
-      state.filters.billFarmer = e.target.value;
-      renderBillsLedger();
-      if (window.lucide) window.lucide.createIcons();
-    });
-  }
-
-  const filterBillCommodity = document.getElementById('filter-bill-commodity');
-  if (filterBillCommodity) {
-    filterBillCommodity.addEventListener('change', (e) => {
-      state.filters.billCommodity = e.target.value;
-      renderBillsLedger();
-      if (window.lucide) window.lucide.createIcons();
-    });
-  }
-
-  const filterBillSearch = document.getElementById('filter-bill-search');
-  if (filterBillSearch) {
-    filterBillSearch.addEventListener('input', (e) => {
-      state.filters.billSearch = e.target.value;
-      renderBillsLedger();
-      if (window.lucide) window.lucide.createIcons();
-    });
-  }
-
-  const filterFarmerSearch = document.getElementById('filter-farmer-search');
-  if (filterFarmerSearch) {
-    filterFarmerSearch.addEventListener('input', (e) => {
-      state.filters.farmerSearch = e.target.value;
-      renderFarmersDirectory();
-      if (window.lucide) window.lucide.createIcons();
-    });
-  }
-
-  if (window.lucide) window.lucide.createIcons();
 });
