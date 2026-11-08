@@ -1,6 +1,7 @@
 /**
  * GTCO-LEDGER - Commodity Trader Advance & Bill Settlement Ledger
  * Complete, production-ready ledger application for APMC agricultural pulse merchants.
+ * Linked with Paisabhai Daily Cashbook & GTCO Stock Tracker.
  */
 
 // ==========================================
@@ -8,6 +9,8 @@
 // ==========================================
 
 const STORAGE_KEY = 'GTCO_LEDGER_DATA_V2';
+const PAISABHAI_STORAGE_KEY = 'paisabhai_ledger_store_v3';
+const STOCK_TRACKER_STORAGE_KEY = 'gtco_stock_tracker_v3';
 
 const COMMODITIES = [
   { id: 'moong', name: 'Moong (Green Gram)', badgeClass: 'commodity-moong', icon: 'sprout' },
@@ -17,257 +20,96 @@ const COMMODITIES = [
 ];
 
 const ADVANCE_PURPOSES = [
-  'Cultivation',
   'Seeds',
   'Fertilizer & Pesticide',
+  'Cultivation',
   'Harvesting',
   'Personal Use',
   'Other'
 ];
 
-// Reference test scenario data generator
-function getReferenceScenarioData(settled = true) {
-  const farmer = {
-    id: 'FARMER-001',
-    name: 'Rameshwar Patil',
-    phone: '+91 98765 43210',
-    village: 'Neelahalli',
-    notes: 'Cultivates Moong, Tur, and Chana. Regular APMC Mandi farmer.',
-    createdAt: '2026-08-01T10:00:00.000Z'
-  };
+// Pre-seeded Neelahalli / APMC Mandi Farmers
+const INITIAL_MANDI_FARMERS = [
+  { id: 'FARMER-001', name: 'Rameshwar Patil', phone: '+91 98765 43210', village: 'Neelahalli', notes: 'Moong, Tur, and Chana grower (Reference Test Farmer)', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-SMP', name: 'SMPATIL', phone: '', village: 'NEELAHALLI', notes: 'Lead Urad pulse grower', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-RM', name: 'RAJU MANKAR', phone: '', village: 'NEELAHALLI', notes: 'Regular Mandi farmer', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-BS', name: 'BASWARAJ SHARNAIYYA', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-AP', name: 'ANIL PUJARI', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-DK', name: 'DEVAPPA K', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-BH', name: 'BEERBAN HOLA', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-SP', name: 'SHARANU POST', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-SB', name: 'SIDDU BAMNALLI', phone: '', village: 'BAMNALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-JS', name: 'JHANGIR SAAB', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-CB', name: 'CHANDAMMA BYADER', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-SM', name: 'SHANKAPPA MALAGI', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-KM', name: 'KALAPPA MADIVAL', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-JP', name: 'JAGADEVI POLICE PATIL', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-MP', name: 'MARTHAND PUJARI', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-NA', name: 'NAGAPPA AMBANNA', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-BD', name: 'BASWARAJ DEVAR', phone: '', village: 'KOKNALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-KB', name: 'KASHAPPA BYADER', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-RMAD', name: 'RAJU MADIVAL', phone: '', village: 'NEELAHALLI', notes: 'Regular pulse farmer', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-MMAD', name: 'MANJUNATH MADIVAL', phone: '', village: 'NEELAHALLI', notes: 'Moong pulse producer', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-JSHET', name: 'JAGU SHETTY', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-MKUR', name: 'MAHESH KURKUNTA', phone: '', village: 'KURKUNTA', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-UKUM', name: 'UDAY KUMAR', phone: '', village: 'NEELAHALLI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-DAND', name: 'DANDAPPA', phone: '', village: 'NEELAHALLI', notes: 'Fertilizer & seed recipient', createdAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'FARMER-SIDBEL', name: 'SIDDAPPA BELKOTI', phone: '', village: 'BELKOTI', notes: '', createdAt: '2026-08-01T10:00:00.000Z' }
+];
 
-  if (!settled) {
-    // Unsettled scenario: 4 advances issued, no bills yet
-    const advances = [
-      {
-        id: 'ADV-001',
-        advanceNumber: 'ADV-001',
-        farmerId: farmer.id,
-        farmerName: farmer.name,
-        date: '2026-08-10',
-        originalAmount: 1000,
-        deductedAmount: 0,
-        unpaidBalance: 1000,
-        purpose: 'Cultivation',
-        notes: 'Initial Cultivation Advance for land prep',
-        status: 'UNPAID',
-        deductionHistory: []
-      },
-      {
-        id: 'ADV-002',
-        advanceNumber: 'ADV-002',
-        farmerId: farmer.id,
-        farmerName: farmer.name,
-        date: '2026-09-05',
-        originalAmount: 5000,
-        deductedAmount: 0,
-        unpaidBalance: 5000,
-        purpose: 'Harvesting',
-        notes: 'Harvesting Expenses for early crop labor',
-        status: 'UNPAID',
-        deductionHistory: []
-      },
-      {
-        id: 'ADV-003',
-        advanceNumber: 'ADV-003',
-        farmerId: farmer.id,
-        farmerName: farmer.name,
-        date: '2026-09-25',
-        originalAmount: 10000,
-        deductedAmount: 0,
-        unpaidBalance: 10000,
-        purpose: 'Fertilizer & Pesticide',
-        notes: 'Nutrient spray & pest management supplies',
-        status: 'UNPAID',
-        deductionHistory: []
-      },
-      {
-        id: 'ADV-004',
-        advanceNumber: 'ADV-004',
-        farmerId: farmer.id,
-        farmerName: farmer.name,
-        date: '2026-10-15',
-        originalAmount: 50000,
-        deductedAmount: 0,
-        unpaidBalance: 50000,
-        purpose: 'Personal Use',
-        notes: 'Household and festival emergency advance',
-        status: 'UNPAID',
-        deductionHistory: []
-      }
-    ];
+// Pre-seeded GTCO Advances from Paisabhai & Test Scenario
+function getInitialSeedAdvances() {
+  return [
+    // Concrete Reference Scenario Advances
+    { id: 'ADV-001', advanceNumber: 'ADV-001', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-08-10', originalAmount: 1000, deductedAmount: 1000, unpaidBalance: 0, purpose: 'Cultivation', notes: 'Initial Cultivation Advance for land prep', status: 'PAID', deductionHistory: [{ billId: 'BILL-101', billNumber: 'BILL-101', commodity: 'Moong (Green Gram)', amountDeducted: 1000, deductionDate: '2026-11-01', notes: 'Full deduction settled against Bill #101' }] },
+    { id: 'ADV-002', advanceNumber: 'ADV-002', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-09-05', originalAmount: 5000, deductedAmount: 5000, unpaidBalance: 0, purpose: 'Harvesting', notes: 'Harvesting Expenses for labor', status: 'PAID', deductionHistory: [{ billId: 'BILL-101', billNumber: 'BILL-101', commodity: 'Moong (Green Gram)', amountDeducted: 5000, deductionDate: '2026-11-01', notes: 'Full deduction settled against Bill #101' }] },
+    { id: 'ADV-003', advanceNumber: 'ADV-003', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-09-25', originalAmount: 10000, deductedAmount: 10000, unpaidBalance: 0, purpose: 'Fertilizer & Pesticide', notes: 'Nutrient spray & pesticide supplies', status: 'PAID', deductionHistory: [{ billId: 'BILL-101', billNumber: 'BILL-101', commodity: 'Moong (Green Gram)', amountDeducted: 10000, deductionDate: '2026-11-01', notes: 'Full deduction settled against Bill #101' }] },
+    { id: 'ADV-004', advanceNumber: 'ADV-004', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-10-15', originalAmount: 50000, deductedAmount: 34000, unpaidBalance: 16000, purpose: 'Personal Use', notes: 'Emergency personal cash advance', status: 'PARTIALLY PAID', deductionHistory: [{ billId: 'BILL-101', billNumber: 'BILL-101', commodity: 'Moong (Green Gram)', amountDeducted: 34000, deductionDate: '2026-11-01', notes: 'Partial deduction of ₹34,000 against Bill #101. ₹16,000 carries forward.' }] },
 
-    return {
-      farmers: [farmer],
-      advances: advances,
-      bills: [],
-      customCommodities: []
-    };
-  }
+    // Seeds Advances Given to Farmers
+    { id: 'ADV-SEED-01', advanceNumber: 'ADV-SEED-01', farmerId: 'FARMER-SMP', farmerName: 'SMPATIL', date: '2026-08-05', originalAmount: 9000, deductedAmount: 0, unpaidBalance: 9000, purpose: 'Seeds', notes: 'Given 2 Bags (100kg) Certified Urad Seeds @ ₹4,500/bag for kharif sowing [Return expected: Urad harvest bags]', status: 'UNPAID', deductionHistory: [] },
+    { id: 'ADV-SEED-02', advanceNumber: 'ADV-SEED-02', farmerId: 'FARMER-RM', farmerName: 'RAJU MANKAR', date: '2026-08-12', originalAmount: 4500, deductedAmount: 0, unpaidBalance: 4500, purpose: 'Seeds', notes: 'Given 1 Bag (50kg) Urad Seeds @ ₹4,500 [Produce return in Mandi]', status: 'UNPAID', deductionHistory: [] },
+    { id: 'ADV-SEED-03', advanceNumber: 'ADV-SEED-03', farmerId: 'FARMER-BS', farmerName: 'BASWARAJ SHARNAIYYA', date: '2026-08-14', originalAmount: 13500, deductedAmount: 0, unpaidBalance: 13500, purpose: 'Seeds', notes: 'Given 3 Bags Urad Seeds @ ₹4,500/bag', status: 'UNPAID', deductionHistory: [] },
 
-  // Settled scenario: Bill #101 for Moong ₹50,000 has been settled
-  // Advance #1 (₹1,000) -> fully paid
-  // Advance #2 (₹5,000) -> fully paid
-  // Advance #3 (₹10,000) -> fully paid
-  // Advance #4 (₹50,000) -> partially paid ₹34,000 (Remaining leftover: ₹16,000)
-  const advances = [
+    // GTCO Advances & Fertilizers/Pesticides from Paisabhai Ledger
+    { id: 'ADV-PB-213', advanceNumber: 'ADV-PB-213', farmerId: 'FARMER-RMAD', farmerName: 'RAJU MADIVAL', date: '2026-08-19', originalAmount: 3000, deductedAmount: 0, unpaidBalance: 3000, purpose: 'Cultivation', notes: 'Cash advance given [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_213' },
+    { id: 'ADV-PB-214', advanceNumber: 'ADV-PB-214', farmerId: 'FARMER-JSHET', farmerName: 'JAGU SHETTY', date: '2026-08-19', originalAmount: 1000, deductedAmount: 0, unpaidBalance: 1000, purpose: 'Cultivation', notes: 'Advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_214' },
+    { id: 'ADV-PB-215', advanceNumber: 'ADV-PB-215', farmerId: 'FARMER-MKUR', farmerName: 'MAHESH KURKUNTA', date: '2026-08-19', originalAmount: 4000, deductedAmount: 0, unpaidBalance: 4000, purpose: 'Cultivation', notes: 'Advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_215' },
+    { id: 'ADV-PB-216', advanceNumber: 'ADV-PB-216', farmerId: 'FARMER-UKUM', farmerName: 'UDAY KUMAR', date: '2026-08-19', originalAmount: 3000, deductedAmount: 0, unpaidBalance: 3000, purpose: 'Cultivation', notes: 'Advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_216' },
+    { id: 'ADV-PB-218', advanceNumber: 'ADV-PB-218', farmerId: 'FARMER-SP', farmerName: 'SHARNU POST', date: '2026-08-19', originalAmount: 3000, deductedAmount: 0, unpaidBalance: 3000, purpose: 'Cultivation', notes: 'Advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_218' },
+    { id: 'ADV-PB-171', advanceNumber: 'ADV-PB-171', farmerId: 'FARMER-DAND', farmerName: 'DANDAPPA', date: '2026-08-15', originalAmount: 500, deductedAmount: 0, unpaidBalance: 500, purpose: 'Fertilizer & Pesticide', notes: 'Crop Medicine / Spray distribution [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_171' },
+    { id: 'ADV-PB-321', advanceNumber: 'ADV-PB-321', farmerId: 'FARMER-SIDBEL', farmerName: 'SIDDAPPA BELKOTI', date: '2026-06-04', originalAmount: 20000, deductedAmount: 0, unpaidBalance: 20000, purpose: 'Cultivation', notes: 'Early season advance [Synced from Paisabhai GTCO]', status: 'UNPAID', deductionHistory: [], paisabhaiTxId: 'tx_hist_321' }
+  ];
+}
+
+// Initial Bill #101 Settled
+function getInitialSeedBills() {
+  return [
     {
-      id: 'ADV-001',
-      advanceNumber: 'ADV-001',
-      farmerId: farmer.id,
-      farmerName: farmer.name,
-      date: '2026-08-10',
-      originalAmount: 1000,
-      deductedAmount: 1000,
-      unpaidBalance: 0,
-      purpose: 'Cultivation',
-      notes: 'Initial Cultivation Advance for land prep',
-      status: 'PAID',
-      deductionHistory: [
-        {
-          billId: 'BILL-101',
-          billNumber: 'BILL-101',
-          commodity: 'Moong (Green Gram)',
-          amountDeducted: 1000,
-          deductionDate: '2026-11-01',
-          notes: 'Full deduction settled against Bill #101'
-        }
-      ]
-    },
-    {
-      id: 'ADV-002',
-      advanceNumber: 'ADV-002',
-      farmerId: farmer.id,
-      farmerName: farmer.name,
-      date: '2026-09-05',
-      originalAmount: 5000,
-      deductedAmount: 5000,
-      unpaidBalance: 0,
-      purpose: 'Harvesting',
-      notes: 'Harvesting Expenses for early crop labor',
-      status: 'PAID',
-      deductionHistory: [
-        {
-          billId: 'BILL-101',
-          billNumber: 'BILL-101',
-          commodity: 'Moong (Green Gram)',
-          amountDeducted: 5000,
-          deductionDate: '2026-11-01',
-          notes: 'Full deduction settled against Bill #101'
-        }
-      ]
-    },
-    {
-      id: 'ADV-003',
-      advanceNumber: 'ADV-003',
-      farmerId: farmer.id,
-      farmerName: farmer.name,
-      date: '2026-09-25',
-      originalAmount: 10000,
-      deductedAmount: 10000,
-      unpaidBalance: 0,
-      purpose: 'Fertilizer & Pesticide',
-      notes: 'Nutrient spray & pest management supplies',
-      status: 'PAID',
-      deductionHistory: [
-        {
-          billId: 'BILL-101',
-          billNumber: 'BILL-101',
-          commodity: 'Moong (Green Gram)',
-          amountDeducted: 10000,
-          deductionDate: '2026-11-01',
-          notes: 'Full deduction settled against Bill #101'
-        }
-      ]
-    },
-    {
-      id: 'ADV-004',
-      advanceNumber: 'ADV-004',
-      farmerId: farmer.id,
-      farmerName: farmer.name,
-      date: '2026-10-15',
-      originalAmount: 50000,
-      deductedAmount: 34000,
-      unpaidBalance: 16000,
-      purpose: 'Personal Use',
-      notes: 'Household and festival emergency advance',
-      status: 'PARTIALLY PAID',
-      deductionHistory: [
-        {
-          billId: 'BILL-101',
-          billNumber: 'BILL-101',
-          commodity: 'Moong (Green Gram)',
-          amountDeducted: 34000,
-          deductionDate: '2026-11-01',
-          notes: 'Partial deduction of ₹34,000 against Bill #101. Remaining balance ₹16,000 carries forward.'
-        }
-      ]
+      id: 'BILL-101',
+      billNumber: 'BILL-101',
+      farmerId: 'FARMER-001',
+      farmerName: 'Rameshwar Patil',
+      farmerVillage: 'Neelahalli',
+      date: '2026-11-01',
+      commodity: 'Moong (Green Gram)',
+      quantity: 6.25,
+      unit: 'Quintals',
+      rate: 8000,
+      grossAmount: 50000,
+      totalAdvancesDeducted: 50000,
+      netPayableCash: 0,
+      leftoverAdvancesCarriedForward: 16000,
+      notes: 'Produce brought to GTCO Mandi shop. Full bill amount adjusted against advances #1, #2, #3 and partial #4.',
+      deductions: [
+        { advanceId: 'ADV-001', advanceNumber: 'ADV-001', advancePurpose: 'Cultivation', advanceOriginalAmount: 1000, amountDeducted: 1000, advanceRemainingBalanceBefore: 1000, advanceRemainingBalanceAfter: 0 },
+        { advanceId: 'ADV-002', advanceNumber: 'ADV-002', advancePurpose: 'Harvesting', advanceOriginalAmount: 5000, amountDeducted: 5000, advanceRemainingBalanceBefore: 5000, advanceRemainingBalanceAfter: 0 },
+        { advanceId: 'ADV-003', advanceNumber: 'ADV-003', advancePurpose: 'Fertilizer & Pesticide', advanceOriginalAmount: 10000, amountDeducted: 10000, advanceRemainingBalanceBefore: 10000, advanceRemainingBalanceAfter: 0 },
+        { advanceId: 'ADV-004', advanceNumber: 'ADV-004', advancePurpose: 'Personal Use', advanceOriginalAmount: 50000, amountDeducted: 34000, advanceRemainingBalanceBefore: 50000, advanceRemainingBalanceAfter: 16000 }
+      ],
+      createdAt: '2026-11-01T11:30:00.000Z'
     }
   ];
-
-  const bill101 = {
-    id: 'BILL-101',
-    billNumber: 'BILL-101',
-    farmerId: farmer.id,
-    farmerName: farmer.name,
-    farmerVillage: farmer.village,
-    date: '2026-11-01',
-    commodity: 'Moong (Green Gram)',
-    quantity: 6.25,
-    unit: 'Quintals',
-    rate: 8000,
-    grossAmount: 50000,
-    totalAdvancesDeducted: 50000,
-    netPayableCash: 0,
-    leftoverAdvancesCarriedForward: 16000,
-    notes: 'Produce brought to GTCO Mandi shop. Full bill amount adjusted against advances #1, #2, #3 and partial #4.',
-    deductions: [
-      {
-        advanceId: 'ADV-001',
-        advanceNumber: 'ADV-001',
-        advancePurpose: 'Cultivation',
-        advanceOriginalAmount: 1000,
-        amountDeducted: 1000,
-        advanceRemainingBalanceBefore: 1000,
-        advanceRemainingBalanceAfter: 0
-      },
-      {
-        advanceId: 'ADV-002',
-        advanceNumber: 'ADV-002',
-        advancePurpose: 'Harvesting',
-        advanceOriginalAmount: 5000,
-        amountDeducted: 5000,
-        advanceRemainingBalanceBefore: 5000,
-        advanceRemainingBalanceAfter: 0
-      },
-      {
-        advanceId: 'ADV-003',
-        advanceNumber: 'ADV-003',
-        advancePurpose: 'Fertilizer & Pesticide',
-        advanceOriginalAmount: 10000,
-        amountDeducted: 10000,
-        advanceRemainingBalanceBefore: 10000,
-        advanceRemainingBalanceAfter: 0
-      },
-      {
-        advanceId: 'ADV-004',
-        advanceNumber: 'ADV-004',
-        advancePurpose: 'Personal Use',
-        advanceOriginalAmount: 50000,
-        amountDeducted: 34000,
-        advanceRemainingBalanceBefore: 50000,
-        advanceRemainingBalanceAfter: 16000
-      }
-    ],
-    createdAt: '2026-11-01T11:30:00.000Z'
-  };
-
-  return {
-    farmers: [farmer],
-    advances: advances,
-    bills: [bill101],
-    customCommodities: []
-  };
 }
 
 // ==========================================
@@ -279,9 +121,10 @@ let state = {
   advances: [],
   bills: [],
   customCommodities: [],
-  activeTab: 'dashboard', // 'dashboard', 'advances', 'bills', 'farmers'
+  activeTab: 'dashboard',
   filters: {
     advanceFarmer: 'all',
+    advancePurpose: 'all',
     advanceStatus: 'all',
     advanceSearch: '',
     billFarmer: 'all',
@@ -291,7 +134,6 @@ let state = {
   }
 };
 
-// Currency Formatter
 function formatINR(val) {
   if (val === null || val === undefined || isNaN(val)) return '₹0';
   return '₹' + Number(val).toLocaleString('en-IN', {
@@ -315,6 +157,210 @@ function formatDate(dateStr) {
   }
 }
 
+// ==========================================
+// REAL-TIME SYNC ENGINE (PAISABHAI + STOCK TRACKER)
+// ==========================================
+
+function syncWithPaisabhai(notify = false) {
+  try {
+    const rawPaisabhai = localStorage.getItem(PAISABHAI_STORAGE_KEY);
+    if (!rawPaisabhai) {
+      if (notify) showToast('Paisabhai store not found in this browser yet. When you enter GTCO transactions in Paisabhai, they appear here automatically!');
+      return 0;
+    }
+
+    const pbData = JSON.parse(rawPaisabhai);
+    if (!pbData || !pbData.transactions) return 0;
+
+    // Find GTCO particular
+    const gtcoPart = (pbData.master?.particulars || []).find(p => (p.name || '').trim().toUpperCase() === 'GTCO' || p.id === 'part_3');
+    const gtcoPartId = gtcoPart ? gtcoPart.id : 'part_3';
+
+    const gtcoTxList = pbData.transactions.filter(t => t.particularId === gtcoPartId);
+    if (gtcoTxList.length === 0) return 0;
+
+    const catMap = {};
+    (pbData.master?.categories || []).forEach(c => { catMap[c.id] = (c.name || '').toUpperCase(); });
+
+    let syncedCount = 0;
+
+    gtcoTxList.forEach(tx => {
+      const catName = catMap[tx.categoryId] || '';
+      const person = (tx.personName || '').trim();
+      if (!person || person === '-' || person === 'N/A') return;
+
+      const isAdvance = catName.includes('ADVANCE');
+      const isFertilizer = catName.includes('FERTILIZER') || catName.includes('DAP');
+      const isPesticide = catName.includes('MEDICINE') || catName.includes('PESTICIDE');
+      const isSeeds = catName.includes('SEED');
+
+      // Ensure farmer exists
+      let farmer = state.farmers.find(f => (f.name || '').trim().toLowerCase() === person.toLowerCase());
+      if (!farmer) {
+        farmer = {
+          id: 'FARMER-PB-' + Math.abs(person.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)),
+          name: person,
+          phone: '',
+          village: 'NEELAHALLI',
+          notes: 'Synced from Paisabhai GTCO ledger',
+          createdAt: new Date().toISOString()
+        };
+        state.farmers.push(farmer);
+      }
+
+      if (isAdvance || isFertilizer || isPesticide || isSeeds) {
+        const purpose = (isFertilizer || isPesticide) ? 'Fertilizer & Pesticide'
+                      : isSeeds ? 'Seeds'
+                      : 'Cultivation';
+
+        const amt = Number(tx.amount) || 0;
+        const existingAdv = state.advances.find(a => a.paisabhaiTxId === tx.id || a.id === `ADV-PB-${tx.id}`);
+
+        if (!existingAdv) {
+          state.advances.push({
+            id: `ADV-PB-${tx.id}`,
+            advanceNumber: `ADV-PB-${(tx.id || '').replace('tx_hist_', '').replace('tx_', '')}`,
+            farmerId: farmer.id,
+            farmerName: farmer.name,
+            date: tx.date || new Date().toISOString().split('T')[0],
+            originalAmount: amt,
+            deductedAmount: 0,
+            unpaidBalance: amt,
+            purpose: purpose,
+            notes: `${catName} via ${tx.paymentMode || 'Cash'} [Synced from Paisabhai GTCO]`,
+            status: 'UNPAID',
+            deductionHistory: [],
+            paisabhaiTxId: tx.id
+          });
+          syncedCount++;
+        } else {
+          // If transaction amount or date changed in Paisabhai, update while preserving settlement status
+          if (existingAdv.originalAmount !== amt || existingAdv.date !== tx.date) {
+            existingAdv.originalAmount = amt;
+            existingAdv.date = tx.date;
+            existingAdv.unpaidBalance = Math.max(0, amt - (existingAdv.deductedAmount || 0));
+            existingAdv.status = existingAdv.unpaidBalance === 0 ? 'PAID' : (existingAdv.deductedAmount > 0 ? 'PARTIALLY PAID' : 'UNPAID');
+            syncedCount++;
+          }
+        }
+      }
+    });
+
+    if (syncedCount > 0) {
+      saveState();
+      renderActiveView();
+    }
+
+    if (notify) {
+      showToast(`⚡ Synced with Paisabhai: Checked ${gtcoTxList.length} GTCO entries across ${state.farmers.length} farmers!`);
+    }
+
+    return syncedCount;
+  } catch (e) {
+    console.error('Error in syncWithPaisabhai:', e);
+    return 0;
+  }
+}
+
+function syncWithStockTracker(notify = false) {
+  try {
+    const rawStock = localStorage.getItem(STOCK_TRACKER_STORAGE_KEY);
+    if (!rawStock) return 0;
+
+    const stockData = JSON.parse(rawStock);
+    if (!stockData || !stockData.masters || !stockData.masters.farmers) return 0;
+
+    let addedFarmers = 0;
+    stockData.masters.farmers.forEach(sf => {
+      const exists = state.farmers.find(f => (f.name || '').trim().toLowerCase() === (sf.name || '').trim().toLowerCase() || f.id === sf.id);
+      if (!exists) {
+        state.farmers.push({
+          id: sf.id || ('FARMER-ST-' + Date.now()),
+          name: sf.name,
+          phone: sf.mobile || '',
+          village: sf.village || 'NEELAHALLI',
+          notes: sf.notes || 'From GTCO Stock Tracker',
+          createdAt: new Date().toISOString()
+        });
+        addedFarmers++;
+      }
+    });
+
+    if (addedFarmers > 0) {
+      saveState();
+      renderActiveView();
+    }
+    return addedFarmers;
+  } catch (e) {
+    console.error('Error syncing Stock Tracker:', e);
+    return 0;
+  }
+}
+
+function syncAllEcosystemData(notify = true) {
+  const pCount = syncWithPaisabhai(false);
+  const sCount = syncWithStockTracker(false);
+  updateSyncStatusBadge();
+  renderActiveView();
+  if (notify) {
+    showToast(`⚡ Real-Time Sync Complete: Paisabhai GTCO ledger & Stock Tracker synchronized!`);
+  }
+}
+
+function updateSyncStatusBadge() {
+  const badge = document.getElementById('sync-status-badge');
+  if (!badge) return;
+
+  const hasPaisabhai = !!localStorage.getItem(PAISABHAI_STORAGE_KEY);
+  const hasStock = !!localStorage.getItem(STOCK_TRACKER_STORAGE_KEY);
+
+  if (hasPaisabhai && hasStock) {
+    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200';
+    badge.innerHTML = '● Live Synced: Paisabhai + Stock Tracker';
+  } else if (hasPaisabhai) {
+    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200';
+    badge.innerHTML = '● Live Synced: Paisabhai Active';
+  } else {
+    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200';
+    badge.innerHTML = '● Standalone / Shared Domain Active';
+  }
+}
+
+// Push advance back into Paisabhai storage if user records an advance in GTCO-LEDGER
+function pushAdvanceToPaisabhai(newAdv) {
+  try {
+    const raw = localStorage.getItem(PAISABHAI_STORAGE_KEY);
+    if (!raw) return;
+
+    const pb = JSON.parse(raw);
+    if (!pb || !pb.transactions) return;
+
+    const gtcoPart = (pb.master?.particulars || []).find(p => (p.name || '').trim().toUpperCase() === 'GTCO' || p.id === 'part_3');
+    const gtcoPartId = gtcoPart ? gtcoPart.id : 'part_3';
+
+    // Map category
+    let catId = 'cat_1'; // ADVANCE
+    if (newAdv.purpose === 'Fertilizer & Pesticide') catId = 'cat_31'; // FERTILIZER
+
+    const newPbTx = {
+      id: 'tx_gtco_' + Date.now(),
+      date: newAdv.date,
+      particularId: gtcoPartId,
+      categoryId: catId,
+      personName: newAdv.farmerName,
+      amount: newAdv.originalAmount,
+      paymentMode: 'Cash',
+      notes: `${newAdv.purpose}: ${newAdv.notes || ''} [From GTCO-LEDGER]`,
+      media: null
+    };
+
+    pb.transactions.push(newPbTx);
+    localStorage.setItem(PAISABHAI_STORAGE_KEY, JSON.stringify(pb));
+  } catch (e) {
+    console.warn('Could not push to Paisabhai:', e);
+  }
+}
+
 // Storage helpers
 function loadState() {
   try {
@@ -326,22 +372,24 @@ function loadState() {
       state.bills = parsed.bills || [];
       state.customCommodities = parsed.customCommodities || [];
     } else {
-      // Default to reference settled test scenario so user sees immediate results
-      const initialData = getReferenceScenarioData(true);
-      state.farmers = initialData.farmers;
-      state.advances = initialData.advances;
-      state.bills = initialData.bills;
-      state.customCommodities = initialData.customCommodities;
+      state.farmers = INITIAL_MANDI_FARMERS;
+      state.advances = getInitialSeedAdvances();
+      state.bills = getInitialSeedBills();
+      state.customCommodities = [];
       saveState();
     }
   } catch (e) {
     console.error('Error loading state from localStorage:', e);
-    const initialData = getReferenceScenarioData(true);
-    state.farmers = initialData.farmers;
-    state.advances = initialData.advances;
-    state.bills = initialData.bills;
-    state.customCommodities = initialData.customCommodities;
+    state.farmers = INITIAL_MANDI_FARMERS;
+    state.advances = getInitialSeedAdvances();
+    state.bills = getInitialSeedBills();
+    state.customCommodities = [];
   }
+
+  // Auto-sync on startup
+  syncWithPaisabhai(false);
+  syncWithStockTracker(false);
+  updateSyncStatusBadge();
 }
 
 function saveState() {
@@ -390,12 +438,16 @@ function getFarmerMetrics(farmerId) {
   const totalBillsValue = bills.reduce((acc, b) => acc + (Number(b.grossAmount) || 0), 0);
   const totalNetCashPaid = bills.reduce((acc, b) => acc + (Number(b.netPayableCash) || 0), 0);
 
+  const seedsAdvances = advances.filter(a => a.purpose === 'Seeds');
+  const totalSeedsValue = seedsAdvances.reduce((acc, a) => acc + (Number(a.originalAmount) || 0), 0);
+
   return {
     totalAdvances,
     totalDeducted,
     remainingAdvanceBalance,
     totalBillsValue,
     totalNetCashPaid,
+    totalSeedsValue,
     advancesCount: advances.length,
     billsCount: bills.length,
     unpaidAdvancesCount: advances.filter(a => a.status !== 'PAID').length
@@ -421,7 +473,6 @@ function getGlobalMetrics() {
   };
 }
 
-// Get next sequential Bill Number
 function getNextBillNumber() {
   if (state.bills.length === 0) return 'BILL-101';
   const nums = state.bills.map(b => {
@@ -432,7 +483,6 @@ function getNextBillNumber() {
   return `BILL-${max + 1}`;
 }
 
-// Get next sequential Advance Number
 function getNextAdvanceNumber() {
   if (state.advances.length === 0) return 'ADV-001';
   const nums = state.advances.map(a => {
@@ -443,7 +493,6 @@ function getNextAdvanceNumber() {
   return `ADV-${String(max + 1).padStart(3, '0')}`;
 }
 
-// Re-calculate and update status of an advance based on deductedAmount & originalAmount
 function updateAdvanceStatus(advance) {
   const orig = Number(advance.originalAmount) || 0;
   const ded = Number(advance.deductedAmount) || 0;
@@ -459,10 +508,7 @@ function updateAdvanceStatus(advance) {
   }
 }
 
-// ==========================================
-// MODAL CONTROLLERS & ACTIONS
-// ==========================================
-
+// Modal controllers
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
@@ -480,14 +526,10 @@ function closeModal(modalId) {
   }
 }
 
-// ==========================================
-// RENDERERS
-// ==========================================
-
+// Tab navigation
 function setTab(tabName) {
   state.activeTab = tabName;
 
-  // Update nav buttons
   ['dashboard', 'advances', 'bills', 'farmers'].forEach(t => {
     const btn = document.getElementById(`nav-${t}`);
     const view = document.getElementById(`view-${t}`);
@@ -530,6 +572,32 @@ function renderDashboard() {
   document.getElementById('dash-advances-count').innerText = m.advancesCount;
   document.getElementById('dash-bills-count').innerText = m.billsCount;
 
+  // Advances by Purpose Breakdown
+  const purposeContainer = document.getElementById('dash-purpose-breakdown');
+  if (purposeContainer) {
+    const purposeTotals = {};
+    state.advances.forEach(a => {
+      purposeTotals[a.purpose] = (purposeTotals[a.purpose] || 0) + (Number(a.originalAmount) || 0);
+    });
+
+    purposeContainer.innerHTML = Object.entries(purposeTotals).map(([p, amt]) => {
+      const pIcon = p === 'Seeds' ? '🌱' : (p === 'Fertilizer & Pesticide' ? '🧪' : '💵');
+      const pct = m.totalAdvancesGiven > 0 ? ((amt / m.totalAdvancesGiven) * 100).toFixed(0) : 0;
+      return `
+        <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-slate-50 border border-slate-100">
+          <div class="flex items-center space-x-2">
+            <span>${pIcon}</span>
+            <span class="font-semibold text-slate-800">${p}</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="font-mono font-bold text-slate-900">${formatINR(amt)}</span>
+            <span class="text-[10px] text-slate-400 font-mono">(${pct}%)</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
   // Commodity Breakdown
   const commContainer = document.getElementById('dash-commodity-breakdown');
   if (commContainer) {
@@ -541,23 +609,16 @@ function renderDashboard() {
     const entries = Object.entries(commoditySales);
     if (entries.length === 0) {
       commContainer.innerHTML = `
-        <div class="col-span-full py-6 text-center text-slate-400 text-sm italic">
-          No commodity bills recorded yet. Create a bill to see distribution.
+        <div class="col-span-full py-4 text-center text-slate-400 text-xs italic">
+          No commodity bills recorded yet. Create a produce bill to see distribution.
         </div>`;
     } else {
       commContainer.innerHTML = entries.map(([name, amount]) => {
         const commObj = getAllCommodities().find(c => c.name.toLowerCase() === name.toLowerCase()) || { badgeClass: 'commodity-custom' };
-        const percent = m.totalGrossBills > 0 ? ((amount / m.totalGrossBills) * 100).toFixed(1) : 0;
         return `
-          <div class="p-4 rounded-xl border border-slate-200 bg-white shadow-xs">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${commObj.badgeClass}">${name}</span>
-              <span class="text-xs font-mono font-medium text-slate-500">${percent}%</span>
-            </div>
-            <div class="text-lg font-bold text-slate-800 font-mono">${formatINR(amount)}</div>
-            <div class="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
-              <div class="bg-emerald-600 h-1.5 rounded-full" style="width: ${percent}%"></div>
-            </div>
+          <div class="p-3 rounded-lg border border-slate-200 bg-slate-50">
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${commObj.badgeClass}">${name}</span>
+            <div class="text-sm font-bold text-slate-800 font-mono mt-1">${formatINR(amount)}</div>
           </div>
         `;
       }).join('');
@@ -569,7 +630,7 @@ function renderDashboard() {
   if (recentAdvContainer) {
     const recentAdv = [...state.advances].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
     if (recentAdv.length === 0) {
-      recentAdvContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm italic">No advances recorded yet.</div>`;
+      recentAdvContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs italic">No advances recorded yet.</div>`;
     } else {
       recentAdvContainer.innerHTML = recentAdv.map(a => `
         <div class="flex items-center justify-between p-3 hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
@@ -577,9 +638,9 @@ function renderDashboard() {
             <div class="flex items-center space-x-2">
               <span class="font-mono font-semibold text-xs text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">${a.advanceNumber}</span>
               <span class="font-medium text-sm text-slate-800">${a.farmerName}</span>
-              <span class="text-xs text-slate-500">(${a.purpose})</span>
+              <span class="text-xs font-semibold ${a.purpose === 'Seeds' ? 'text-emerald-700' : 'text-slate-500'}">(${a.purpose === 'Seeds' ? '🌱 Seeds' : a.purpose})</span>
             </div>
-            <div class="text-xs text-slate-400 mt-0.5">${formatDate(a.date)}</div>
+            <div class="text-xs text-slate-400 mt-0.5">${formatDate(a.date)} ${a.paisabhaiTxId ? '• <span class="text-indigo-600 font-medium">Paisabhai Synced</span>' : ''}</div>
           </div>
           <div class="text-right">
             <div class="font-mono font-bold text-sm text-slate-800">${formatINR(a.originalAmount)}</div>
@@ -595,7 +656,7 @@ function renderDashboard() {
   if (recentBillsContainer) {
     const recentBills = [...state.bills].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
     if (recentBills.length === 0) {
-      recentBillsContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm italic">No bills recorded yet.</div>`;
+      recentBillsContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs italic">No bills recorded yet.</div>`;
     } else {
       recentBillsContainer.innerHTML = recentBills.map(b => `
         <div class="flex items-center justify-between p-3 hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
@@ -622,6 +683,13 @@ function getStatusBadgeClass(status) {
   return 'badge-unpaid';
 }
 
+function getPurposeBadgeClass(purpose) {
+  if (purpose === 'Seeds') return 'bg-emerald-50 text-emerald-800 border-emerald-300';
+  if (purpose === 'Fertilizer & Pesticide') return 'bg-blue-50 text-blue-800 border-blue-300';
+  if (purpose === 'Harvesting') return 'bg-amber-50 text-amber-800 border-amber-300';
+  return 'bg-slate-50 text-slate-700 border-slate-200';
+}
+
 // 2. Advances Ledger View
 function renderAdvancesLedger() {
   populateFarmerDropdown('filter-advance-farmer', state.filters.advanceFarmer, true);
@@ -634,6 +702,9 @@ function renderAdvancesLedger() {
   // Filters
   if (state.filters.advanceFarmer !== 'all') {
     list = list.filter(a => a.farmerId === state.filters.advanceFarmer);
+  }
+  if (state.filters.advancePurpose !== 'all') {
+    list = list.filter(a => a.purpose === state.filters.advancePurpose);
   }
   if (state.filters.advanceStatus !== 'all') {
     list = list.filter(a => a.status === state.filters.advanceStatus);
@@ -690,22 +761,25 @@ function renderAdvancesLedger() {
       <div class="text-[11px] text-slate-400 italic mt-1">No deductions yet — Full balance carries forward</div>
     `;
 
+    const purposeIcon = adv.purpose === 'Seeds' ? '🌱' : (adv.purpose === 'Fertilizer & Pesticide' ? '🧪' : '💵');
+
     return `
       <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
         <td class="py-3.5 px-4 font-mono font-semibold text-xs text-slate-700 whitespace-nowrap align-top">
           ${adv.advanceNumber}
+          ${adv.paisabhaiTxId ? '<div class="text-[10px] text-indigo-700 font-mono font-bold">Paisabhai</div>' : ''}
         </td>
         <td class="py-3.5 px-4 text-xs text-slate-500 whitespace-nowrap align-top">
           ${formatDate(adv.date)}
         </td>
         <td class="py-3.5 px-4 align-top">
           <div class="font-semibold text-sm text-slate-800">${adv.farmerName}</div>
-          <div class="text-xs text-slate-500">${farmer ? farmer.village : ''}</div>
-          <div class="mt-1">
-            <span class="inline-block text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded">
-              ${adv.purpose}
+          <div class="text-xs text-slate-500">${farmer ? farmer.village : 'Neelahalli'}</div>
+          <div class="mt-1 flex flex-wrap items-center gap-1">
+            <span class="inline-flex items-center text-[11px] font-bold border px-2 py-0.5 rounded ${getPurposeBadgeClass(adv.purpose)}">
+              <span class="mr-1">${purposeIcon}</span> ${adv.purpose}
             </span>
-            ${adv.notes ? `<span class="text-xs text-slate-500 ml-1.5 italic font-normal">"${adv.notes}"</span>` : ''}
+            ${adv.notes ? `<span class="text-xs text-slate-600 ml-1 italic font-normal">"${adv.notes}"</span>` : ''}
           </div>
           ${deductionsHtml}
         </td>
@@ -871,7 +945,7 @@ function renderFarmersDirectory() {
             <div>
               <h3 class="font-bold text-base text-slate-800">${f.name}</h3>
               <div class="text-xs text-slate-500 flex items-center space-x-2 mt-0.5">
-                ${f.village ? `<span><i data-lucide="map-pin" class="w-3 h-3 inline text-slate-400"></i> ${f.village}</span>` : ''}
+                <span><i data-lucide="map-pin" class="w-3 h-3 inline text-slate-400"></i> ${f.village || 'Neelahalli'}</span>
                 ${f.phone ? `<span><i data-lucide="phone" class="w-3 h-3 inline text-slate-400"></i> ${f.phone}</span>` : ''}
               </div>
             </div>
@@ -897,7 +971,7 @@ function renderFarmersDirectory() {
               <span class="font-mono font-bold text-amber-800">${formatINR(m.remainingAdvanceBalance)}</span>
             </div>
             <div class="bg-blue-50/60 p-2 rounded border border-blue-100">
-              <span class="text-blue-700 text-[11px] block">Total Bills Value</span>
+              <span class="text-blue-700 text-[11px] block">Total Produce Bills</span>
               <span class="font-mono font-bold text-blue-800">${formatINR(m.totalBillsValue)}</span>
             </div>
           </div>
@@ -906,7 +980,7 @@ function renderFarmersDirectory() {
         <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
           <button onclick="viewFarmerStatement('${f.id}')" class="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800">
             <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-            <span>View Statement & Ledger</span>
+            <span>Statement & Ledger</span>
           </button>
           <div class="flex items-center space-x-1">
             <button onclick="editFarmer('${f.id}')" class="text-slate-400 hover:text-slate-700 p-1 rounded" title="Edit Farmer">
@@ -922,7 +996,6 @@ function renderFarmersDirectory() {
   }).join('');
 }
 
-// Helper to populate farmer select dropdowns
 function populateFarmerDropdown(elementId, selectedId = '', includeAllOption = false) {
   const el = document.getElementById(elementId);
   if (!el) return;
@@ -934,16 +1007,19 @@ function populateFarmerDropdown(elementId, selectedId = '', includeAllOption = f
     options += `<option value="">-- Select Farmer --</option>`;
   }
 
-  state.farmers.forEach(f => {
-    const isSelected = f.id === selectedId ? 'selected' : '';
-    options += `<option value="${f.id}" ${isSelected}>${f.name} (${f.village || 'N/A'})</option>`;
+  // Sort farmers alphabetically
+  const sorted = [...state.farmers].sort((a, b) => a.name.localeCompare(b.name));
+
+  sorted.forEach(f => {
+    const isSelected = f.id === selectedId || f.name.toLowerCase() === selectedId.toLowerCase() ? 'selected' : '';
+    options += `<option value="${f.id}" ${isSelected}>${f.name} (${f.village || 'NEELAHALLI'})</option>`;
   });
 
   el.innerHTML = options;
 }
 
 // ==========================================
-// ADVANCE CREATION & MANAGEMENT
+// ADVANCE & SEEDS & FERTILIZER CREATION
 // ==========================================
 
 function openRecordAdvanceModal(preselectedFarmerId = '') {
@@ -952,10 +1028,39 @@ function openRecordAdvanceModal(preselectedFarmerId = '') {
   document.getElementById('advance-number').value = getNextAdvanceNumber();
   document.getElementById('advance-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('advance-amount').value = '';
-  document.getElementById('advance-purpose').value = 'Cultivation';
+  document.getElementById('advance-purpose').value = 'Seeds';
   document.getElementById('advance-notes').value = '';
 
+  onAdvancePurposeChanged();
   openModal('modal-record-advance');
+}
+
+function onAdvancePurposeChanged() {
+  const purpose = document.getElementById('advance-purpose').value;
+  const seedsGroup = document.getElementById('advance-seeds-group');
+  const fertGroup = document.getElementById('advance-fert-group');
+
+  if (purpose === 'Seeds') {
+    seedsGroup.classList.remove('hidden');
+    fertGroup.classList.add('hidden');
+  } else if (purpose === 'Fertilizer & Pesticide') {
+    seedsGroup.classList.add('hidden');
+    fertGroup.classList.remove('hidden');
+  } else {
+    seedsGroup.classList.add('hidden');
+    fertGroup.classList.add('hidden');
+  }
+}
+
+function calculateSeedOrFertTotal() {
+  const purpose = document.getElementById('advance-purpose').value;
+  if (purpose === 'Seeds') {
+    const qty = parseFloat(document.getElementById('seed-qty').value);
+    const rate = parseFloat(document.getElementById('seed-rate').value);
+    if (!isNaN(qty) && !isNaN(rate) && qty > 0 && rate > 0) {
+      document.getElementById('advance-amount').value = Math.round(qty * rate);
+    }
+  }
 }
 
 function handleSaveAdvance(e) {
@@ -974,6 +1079,27 @@ function handleSaveAdvance(e) {
     return;
   }
 
+  const purpose = document.getElementById('advance-purpose').value;
+  let customNotes = document.getElementById('advance-notes').value.trim();
+
+  if (purpose === 'Seeds') {
+    const sVar = document.getElementById('seed-variety').value;
+    const sQty = document.getElementById('seed-qty').value;
+    const sUnit = document.getElementById('seed-unit').value;
+    const sRate = document.getElementById('seed-rate').value;
+    if (sQty && sRate) {
+      const seedSpec = `Seeds Given: ${sQty} ${sUnit} ${sVar} @ ${formatINR(sRate)}/${sUnit}`;
+      customNotes = customNotes ? `${seedSpec} | ${customNotes}` : seedSpec;
+    }
+  } else if (purpose === 'Fertilizer & Pesticide') {
+    const fProd = document.getElementById('fert-product').value.trim();
+    const fQty = document.getElementById('fert-qty').value;
+    if (fProd) {
+      const fertSpec = `Distributed: ${fProd}${fQty ? ` (${fQty})` : ''}`;
+      customNotes = customNotes ? `${fertSpec} | ${customNotes}` : fertSpec;
+    }
+  }
+
   const newAdv = {
     id: 'ADV-' + Date.now(),
     advanceNumber: document.getElementById('advance-number').value.trim() || getNextAdvanceNumber(),
@@ -983,18 +1109,22 @@ function handleSaveAdvance(e) {
     originalAmount: amount,
     deductedAmount: 0,
     unpaidBalance: amount,
-    purpose: document.getElementById('advance-purpose').value,
-    notes: document.getElementById('advance-notes').value.trim(),
+    purpose: purpose,
+    notes: customNotes,
     status: 'UNPAID',
     deductionHistory: []
   };
 
   state.advances.push(newAdv);
   saveState();
+
+  // Push back into Paisabhai cashbook
+  pushAdvanceToPaisabhai(newAdv);
+
   closeModal('modal-record-advance');
   renderActiveView();
 
-  showToast(`Advance ${newAdv.advanceNumber} (₹${amount.toLocaleString('en-IN')}) recorded for ${farmer.name}!`);
+  showToast(`${purpose === 'Seeds' ? '🌱 Seed' : '💰'} Advance ${newAdv.advanceNumber} (${formatINR(amount)}) recorded for ${farmer.name} & synced with Paisabhai!`);
 }
 
 function deleteAdvance(advanceId) {
@@ -1002,11 +1132,11 @@ function deleteAdvance(advanceId) {
   if (!adv) return;
 
   if (adv.deductedAmount > 0) {
-    alert(`Cannot delete Advance ${adv.advanceNumber} because ₹${adv.deductedAmount.toLocaleString('en-IN')} has already been deducted in bills. Please delete or modify the corresponding bills first.`);
+    alert(`Cannot delete Advance ${adv.advanceNumber} because ${formatINR(adv.deductedAmount)} has already been deducted in bills. Please delete or modify the corresponding bills first.`);
     return;
   }
 
-  if (confirm(`Are you sure you want to delete Advance ${adv.advanceNumber} (₹${adv.originalAmount.toLocaleString('en-IN')})?`)) {
+  if (confirm(`Are you sure you want to delete Advance ${adv.advanceNumber} (${formatINR(adv.originalAmount)})?`)) {
     state.advances = state.advances.filter(a => a.id !== advanceId);
     saveState();
     renderActiveView();
@@ -1018,14 +1148,14 @@ function deleteAdvance(advanceId) {
 // BILL & ADVANCE DEDUCTION ENGINE
 // ==========================================
 
-let activeBillDeductions = {}; // advanceId -> number to deduct
+let activeBillDeductions = {};
 
 function openNewBillModal(preselectedFarmerId = '') {
   populateFarmerDropdown('bill-farmer-select', preselectedFarmerId);
 
   document.getElementById('bill-number').value = getNextBillNumber();
   document.getElementById('bill-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('bill-commodity').value = 'Moong (Green Gram)';
+  document.getElementById('bill-commodity').value = 'Urad (Black Gram)';
   document.getElementById('bill-custom-commodity').value = '';
   document.getElementById('bill-custom-commodity-group').classList.add('hidden');
 
@@ -1069,36 +1199,84 @@ function onBillFarmerSelected(farmerId) {
   const farmer = getFarmerById(farmerId);
   const metrics = getFarmerMetrics(farmerId);
 
-  // Show farmer banner
+  // Check for inward produce lots in Stock Tracker
+  let stockLots = [];
+  try {
+    const rawStock = localStorage.getItem(STOCK_TRACKER_STORAGE_KEY);
+    if (rawStock) {
+      const parsedStock = JSON.parse(rawStock);
+      if (parsedStock && parsedStock.inwardLots) {
+        stockLots = parsedStock.inwardLots.filter(l =>
+          (l.farmerId || '').toLowerCase() === (farmer.id || '').toLowerCase() ||
+          (l.farmerName || '').toLowerCase() === (farmer.name || '').toLowerCase()
+        );
+      }
+    }
+  } catch (e) {}
+
   const banner = document.getElementById('bill-farmer-summary-banner');
   banner.classList.remove('hidden');
+
+  let stockLotsHtml = '';
+  if (stockLots.length > 0) {
+    stockLotsHtml = `
+      <div class="pt-2 border-t border-slate-200 mt-2">
+        <div class="text-[11px] font-bold text-amber-900 mb-1 flex items-center justify-between">
+          <span>📦 Inward Produce Recorded in Stock Tracker (${stockLots.length} Lots):</span>
+          <span class="text-[10px] text-amber-700">Click to Auto-fill</span>
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          ${stockLots.map(l => `
+            <button type="button" onclick="autoFillProduceFromStockTracker('${l.lotId}', ${l.unweighedBags})" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-900 font-mono px-2 py-1 rounded border border-amber-300 transition">
+              Lot ${l.lotId}: ${l.unweighedBags} Bags • ${l.status || 'Received'}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   banner.innerHTML = `
     <div class="flex flex-wrap items-center justify-between text-xs gap-2">
       <div>
         <span class="font-bold text-slate-800 text-sm">${farmer.name}</span>
-        <span class="text-slate-500 ml-1">(${farmer.village || 'N/A'})</span>
+        <span class="text-slate-500 ml-1">(${farmer.village || 'Neelahalli'})</span>
       </div>
       <div class="flex items-center space-x-3 font-mono">
         <div>
           <span class="text-slate-500">Unpaid Advances:</span>
           <span class="font-bold text-amber-700 ml-1 text-sm">${formatINR(metrics.remainingAdvanceBalance)}</span>
         </div>
-        <div>
-          <span class="text-slate-500">Total Advances Taken:</span>
-          <span class="font-medium text-slate-700 ml-1">${formatINR(metrics.totalAdvances)}</span>
-        </div>
+        ${metrics.totalSeedsValue > 0 ? `
+          <div>
+            <span class="text-slate-500">Seeds Value:</span>
+            <span class="font-bold text-emerald-700 ml-1">🌱 ${formatINR(metrics.totalSeedsValue)}</span>
+          </div>
+        ` : ''}
       </div>
     </div>
+    ${stockLotsHtml}
   `;
 
-  // Filter outstanding advances for this farmer
+  // Filter outstanding advances for this farmer (Seeds, Cash, Fertilizer)
   const outstandingAdvances = state.advances
     .filter(a => a.farmerId === farmerId && a.status !== 'PAID' && a.unpaidBalance > 0)
-    .sort((a, b) => new Date(a.date) - new Date(b.date)); // Oldest first (FIFO)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   activeBillDeductions = {};
   renderBillOutstandingAdvances(outstandingAdvances);
   updateBillSettlementCalculations();
+}
+
+function autoFillProduceFromStockTracker(lotId, bags) {
+  document.getElementById('bill-commodity').value = 'Urad (Black Gram)';
+  document.getElementById('bill-quantity').value = bags;
+  document.getElementById('bill-unit').value = 'Bags (50kg)';
+  document.getElementById('bill-rate').value = 3800; // standard approx rate per bag
+  document.getElementById('bill-gross-amount').value = bags * 3800;
+  document.getElementById('bill-notes').value = `Harvest produce returned from Stock Tracker Lot ${lotId} (${bags} bags)`;
+  updateBillSettlementCalculations();
+  showToast(`Auto-filled produce return from Stock Tracker Lot ${lotId}: ${bags} Bags!`);
 }
 
 function renderBillOutstandingAdvances(advances) {
@@ -1119,6 +1297,7 @@ function renderBillOutstandingAdvances(advances) {
   container.innerHTML = advances.map(adv => {
     const currentDeduction = activeBillDeductions[adv.id] || 0;
     const isChecked = currentDeduction > 0;
+    const pIcon = adv.purpose === 'Seeds' ? '🌱' : (adv.purpose === 'Fertilizer & Pesticide' ? '🧪' : '💵');
 
     return `
       <div class="p-3 bg-white rounded-lg border border-slate-200 hover:border-emerald-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3" id="adv-row-${adv.id}">
@@ -1127,14 +1306,14 @@ function renderBillOutstandingAdvances(advances) {
           <div>
             <div class="flex items-center space-x-2">
               <span class="font-mono font-bold text-xs text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">${adv.advanceNumber}</span>
-              <span class="text-xs font-semibold text-slate-700">${adv.purpose}</span>
+              <span class="text-xs font-semibold text-slate-700">${pIcon} ${adv.purpose}</span>
               <span class="text-[10px] font-semibold px-2 py-0.2 rounded-full ${getStatusBadgeClass(adv.status)}">${adv.status}</span>
             </div>
             <div class="text-[11px] text-slate-500 mt-0.5">
               Issued: ${formatDate(adv.date)} • Original: <span class="font-mono font-medium">${formatINR(adv.originalAmount)}</span>
               ${adv.deductedAmount > 0 ? ` • Already Paid: <span class="font-mono text-emerald-700">${formatINR(adv.deductedAmount)}</span>` : ''}
             </div>
-            ${adv.notes ? `<div class="text-[11px] text-slate-400 italic">"${adv.notes}"</div>` : ''}
+            ${adv.notes ? `<div class="text-[11px] text-slate-500 italic">"${adv.notes}"</div>` : ''}
           </div>
         </div>
 
@@ -1149,7 +1328,7 @@ function renderBillOutstandingAdvances(advances) {
               <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-xs text-slate-400 font-mono">₹</span>
               <input type="number" id="input-deduct-${adv.id}" value="${currentDeduction > 0 ? currentDeduction : ''}" placeholder="0" min="0" max="${adv.unpaidBalance}" oninput="onAdvanceDeductInput('${adv.id}', ${adv.unpaidBalance})" class="w-28 pl-6 pr-2 py-1 text-right text-xs font-mono font-bold border border-slate-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
             </div>
-            <button type="button" onclick="setFullAdvanceDeduction('${adv.id}', ${adv.unpaidBalance})" class="px-2 py-1 text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200" title="Deduct entire remaining balance of this advance">
+            <button type="button" onclick="setFullAdvanceDeduction('${adv.id}', ${adv.unpaidBalance})" class="px-2 py-1 text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200" title="Deduct entire balance of this advance">
               Max
             </button>
           </div>
@@ -1175,11 +1354,7 @@ function onAdvanceDeductInput(advanceId, maxBalance) {
   const checkbox = document.getElementById(`check-${advanceId}`);
   let val = parseFloat(input.value);
 
-  if (isNaN(val) || val < 0) {
-    val = 0;
-  }
-
-  // Cap at remaining balance of this advance
+  if (isNaN(val) || val < 0) val = 0;
   if (val > maxBalance) {
     val = maxBalance;
     input.value = maxBalance;
@@ -1201,7 +1376,6 @@ function toggleAdvanceCheckbox(advanceId, maxBalance) {
   const input = document.getElementById(`input-deduct-${advanceId}`);
 
   if (checkbox.checked) {
-    // Fill up to remaining bill capacity or max balance
     const gross = parseFloat(document.getElementById('bill-gross-amount').value) || 0;
     const currentTotalDeducted = Object.entries(activeBillDeductions)
       .filter(([id]) => id !== advanceId)
@@ -1231,7 +1405,6 @@ function setFullAdvanceDeduction(advanceId, maxBalance) {
   updateBillSettlementCalculations();
 }
 
-// AUTO-FIT FIFO DEDUCTION ENGINE
 function applyAutoFitFIFODeduction() {
   const farmerId = document.getElementById('bill-farmer-select').value;
   if (!farmerId) {
@@ -1245,19 +1418,10 @@ function applyAutoFitFIFODeduction() {
     return;
   }
 
-  // Prompt or check for custom max deduction limit (default to full bill amount)
-  let maxDeductionLimit = grossBill;
-  const customLimitPrompt = document.getElementById('auto-fit-max-limit');
-  if (customLimitPrompt && customLimitPrompt.value) {
-    const lim = parseFloat(customLimitPrompt.value);
-    if (!isNaN(lim) && lim > 0 && lim < grossBill) {
-      maxDeductionLimit = lim;
-    }
-  }
-
+  let remainingCapacity = grossBill;
   const outstandingAdvances = state.advances
     .filter(a => a.farmerId === farmerId && a.status !== 'PAID' && a.unpaidBalance > 0)
-    .sort((a, b) => new Date(a.date) - new Date(b.date)); // Oldest first
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   if (outstandingAdvances.length === 0) {
     alert('No outstanding advances to deduct for this farmer.');
@@ -1265,11 +1429,9 @@ function applyAutoFitFIFODeduction() {
   }
 
   activeBillDeductions = {};
-  let remainingCapacity = maxDeductionLimit;
 
   for (const adv of outstandingAdvances) {
     if (remainingCapacity <= 0) break;
-
     const deduct = Math.min(adv.unpaidBalance, remainingCapacity);
     if (deduct > 0) {
       activeBillDeductions[adv.id] = deduct;
@@ -1280,7 +1442,7 @@ function applyAutoFitFIFODeduction() {
   renderBillOutstandingAdvances(outstandingAdvances);
   updateBillSettlementCalculations();
 
-  showToast(`Auto-fit FIFO applied: ${formatINR(maxDeductionLimit - remainingCapacity)} deducted across ${Object.keys(activeBillDeductions).length} advance(s)!`);
+  showToast(`Auto-fit FIFO applied: ${formatINR(grossBill - remainingCapacity)} deducted across ${Object.keys(activeBillDeductions).length} advance(s)!`);
 }
 
 function clearAllBillDeductions() {
@@ -1308,7 +1470,6 @@ function updateBillSettlementCalculations() {
   }
   const leftoverCarriedForward = Math.max(0, totalOutstanding - totalDeducted);
 
-  // Update summary fields
   const elGross = document.getElementById('calc-gross-value');
   const elDeducted = document.getElementById('calc-total-deducted');
   const elNet = document.getElementById('calc-net-payable');
@@ -1323,13 +1484,12 @@ function updateBillSettlementCalculations() {
   if (elWarning) {
     if (totalDeducted > gross && gross > 0) {
       elWarning.classList.remove('hidden');
-      elWarning.innerText = `Warning: Advances deducted (${formatINR(totalDeducted)}) exceed Gross Bill Value (${formatINR(gross)})!`;
+      elWarning.innerText = `Warning: Advances deducted (${formatINR(totalDeducted)}) exceed Gross Produce Value (${formatINR(gross)})!`;
     } else {
       elWarning.classList.add('hidden');
     }
   }
 
-  // Update itemized deduction list preview
   const breakdownList = document.getElementById('calc-deductions-breakdown');
   if (breakdownList) {
     const entries = Object.entries(activeBillDeductions);
@@ -1393,7 +1553,6 @@ function handleSaveBill(e) {
   const rate = parseFloat(document.getElementById('bill-rate').value) || null;
   const notes = document.getElementById('bill-notes').value.trim();
 
-  // Deductions validation
   const deductions = [];
   let totalDeductions = 0;
 
@@ -1425,12 +1584,6 @@ function handleSaveBill(e) {
     }
   }
 
-  if (totalDeductions > grossAmount) {
-    if (!confirm(`Total advance deductions (${formatINR(totalDeductions)}) exceed the bill value (${formatINR(grossAmount)}). Do you want to proceed anyway?`)) {
-      return;
-    }
-  }
-
   const netPayableCash = Math.max(0, grossAmount - totalDeductions);
 
   // Apply deductions to advances
@@ -1440,7 +1593,6 @@ function handleSaveBill(e) {
       adv.deductedAmount = (Number(adv.deductedAmount) || 0) + d.amountDeducted;
       updateAdvanceStatus(adv);
 
-      // Add to deduction history
       if (!adv.deductionHistory) adv.deductionHistory = [];
       adv.deductionHistory.push({
         billId: billNumber,
@@ -1453,7 +1605,6 @@ function handleSaveBill(e) {
     }
   });
 
-  // Calculate farmer's leftover balance after this bill
   const farmerRemainingAdvances = state.advances
     .filter(a => a.farmerId === farmerId)
     .reduce((sum, a) => sum + (Number(a.unpaidBalance) || 0), 0);
@@ -1483,9 +1634,7 @@ function handleSaveBill(e) {
   closeModal('modal-new-bill');
   renderActiveView();
 
-  showToast(`Bill ${billNumber} created successfully! Net Cash to Farmer: ${formatINR(netPayableCash)}`);
-
-  // Prompt to immediately view/print receipt
+  showToast(`Bill ${billNumber} created! Net Cash Paid to Farmer: ${formatINR(netPayableCash)}`);
   viewBillReceipt(newBill.id);
 }
 
@@ -1494,7 +1643,6 @@ function deleteBill(billId) {
   if (!bill) return;
 
   if (confirm(`Are you sure you want to delete Bill ${bill.billNumber}? This will REVERT all ${formatINR(bill.totalAdvancesDeducted)} advance deductions back to the farmer's unpaid advances.`)) {
-    // Revert advance deductions
     if (bill.deductions && bill.deductions.length > 0) {
       bill.deductions.forEach(d => {
         const adv = state.advances.find(a => a.id === d.advanceId);
@@ -1502,7 +1650,6 @@ function deleteBill(billId) {
           adv.deductedAmount = Math.max(0, (Number(adv.deductedAmount) || 0) - d.amountDeducted);
           updateAdvanceStatus(adv);
 
-          // Remove bill from advance deductionHistory
           if (adv.deductionHistory) {
             adv.deductionHistory = adv.deductionHistory.filter(h => h.billNumber !== bill.billNumber && h.billId !== bill.id);
           }
@@ -1548,13 +1695,13 @@ function viewBillReceipt(billId) {
         <div>
           <div class="text-slate-500 font-medium">Farmer Details:</div>
           <div class="font-bold text-sm text-slate-900">${bill.farmerName}</div>
-          <div>Village: <span class="font-medium">${bill.farmerVillage || (farmer ? farmer.village : 'N/A')}</span></div>
+          <div>Village: <span class="font-medium">${bill.farmerVillage || (farmer ? farmer.village : 'Neelahalli')}</span></div>
           <div>Phone: <span class="font-medium">${farmer ? farmer.phone : 'N/A'}</span></div>
         </div>
         <div class="text-right">
           <div>Bill Number: <span class="font-mono font-bold text-sm text-emerald-800">${bill.billNumber}</span></div>
           <div>Bill Date: <span class="font-medium">${formatDate(bill.date)}</span></div>
-          <div>Payment Mode: <span class="font-medium">Advance Adjustment & Cash</span></div>
+          <div>Mode: <span class="font-medium">Produce Adjustment & Cash</span></div>
         </div>
       </div>
 
@@ -1562,7 +1709,7 @@ function viewBillReceipt(billId) {
       <table class="w-full text-xs border border-slate-200 mb-4">
         <thead class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
           <tr>
-            <th class="py-2 px-3 text-left">Commodity</th>
+            <th class="py-2 px-3 text-left">Commodity Return</th>
             <th class="py-2 px-3 text-right">Quantity</th>
             <th class="py-2 px-3 text-right">Rate / Unit</th>
             <th class="py-2 px-3 text-right">Gross Value</th>
@@ -1570,18 +1717,10 @@ function viewBillReceipt(billId) {
         </thead>
         <tbody>
           <tr>
-            <td class="py-2.5 px-3 font-semibold text-slate-800">
-              ${bill.commodity}
-            </td>
-            <td class="py-2.5 px-3 font-mono text-right">
-              ${bill.quantity ? `${bill.quantity} ${bill.unit || 'Qtl'}` : '-'}
-            </td>
-            <td class="py-2.5 px-3 font-mono text-right">
-              ${bill.rate ? formatINR(bill.rate) : '-'}
-            </td>
-            <td class="py-2.5 px-3 font-mono font-bold text-right text-slate-900">
-              ${formatINR(bill.grossAmount)}
-            </td>
+            <td class="py-2.5 px-3 font-semibold text-slate-800">${bill.commodity}</td>
+            <td class="py-2.5 px-3 font-mono text-right">${bill.quantity ? `${bill.quantity} ${bill.unit || 'Qtl'}` : '-'}</td>
+            <td class="py-2.5 px-3 font-mono text-right">${bill.rate ? formatINR(bill.rate) : '-'}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-right text-slate-900">${formatINR(bill.grossAmount)}</td>
           </tr>
         </tbody>
       </table>
@@ -1589,7 +1728,7 @@ function viewBillReceipt(billId) {
       <!-- Advances Deducted Breakdown -->
       <div class="mb-4">
         <div class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-          <span>Advance Deductions Settled in this Bill:</span>
+          <span>Advance Deductions (Cash, Seeds & Fert) Settled in this Bill:</span>
           <span class="text-emerald-800 font-mono">${formatINR(bill.totalAdvancesDeducted)}</span>
         </div>
         ${deductions.length > 0 ? `
@@ -1597,7 +1736,7 @@ function viewBillReceipt(billId) {
             <thead class="bg-amber-50/70 text-slate-700 border-b border-slate-200">
               <tr>
                 <th class="py-1 px-2 text-left">Adv #</th>
-                <th class="py-1 px-2 text-left">Purpose</th>
+                <th class="py-1 px-2 text-left">Purpose / Item</th>
                 <th class="py-1 px-2 text-right">Original</th>
                 <th class="py-1 px-2 text-right">Deducted Now</th>
                 <th class="py-1 px-2 text-right">Leftover Carryover</th>
@@ -1607,7 +1746,7 @@ function viewBillReceipt(billId) {
               ${deductions.map(d => `
                 <tr>
                   <td class="py-1.5 px-2 font-mono font-semibold">${d.advanceNumber}</td>
-                  <td class="py-1.5 px-2 text-slate-600">${d.advancePurpose}</td>
+                  <td class="py-1.5 px-2 text-slate-700 font-medium">${d.advancePurpose === 'Seeds' ? '🌱 Seeds' : d.advancePurpose}</td>
                   <td class="py-1.5 px-2 font-mono text-right">${formatINR(d.advanceOriginalAmount)}</td>
                   <td class="py-1.5 px-2 font-mono text-right font-bold text-emerald-800">${formatINR(d.amountDeducted)}</td>
                   <td class="py-1.5 px-2 font-mono text-right text-amber-700">${formatINR(d.advanceRemainingBalanceAfter)}</td>
@@ -1676,31 +1815,28 @@ function viewFarmerStatement(farmerId) {
 
   container.innerHTML = `
     <div class="print-area bg-white p-6 max-w-3xl mx-auto border border-slate-200 rounded-xl shadow-sm text-slate-800">
-      <!-- Header -->
       <div class="text-center pb-4 border-b-2 border-emerald-800">
         <h2 class="text-xl font-extrabold text-emerald-900 tracking-wide uppercase">GURURAJ TRADING COMPANY (GTCO)</h2>
-        <div class="text-xs text-slate-600 font-medium">APMC Mandi Yard • Trader Advance & Commodity Ledger Statement</div>
+        <div class="text-xs text-slate-600 font-medium">APMC Mandi Yard • Trader Advance, Seeds & Commodity Ledger Statement</div>
         <div class="mt-1 inline-block px-3 py-0.5 bg-emerald-100 text-emerald-900 text-xs font-bold rounded-full">
           FARMER ACCOUNT LEDGER
         </div>
       </div>
 
-      <!-- Farmer Info -->
       <div class="grid grid-cols-2 gap-4 my-4 p-3 bg-slate-50 rounded-lg text-xs">
         <div>
           <div class="text-slate-500 font-medium">Farmer Name:</div>
           <div class="font-bold text-sm text-slate-900">${farmer.name}</div>
-          <div>Village: <span class="font-medium">${farmer.village || 'N/A'}</span></div>
+          <div>Village: <span class="font-medium">${farmer.village || 'Neelahalli'}</span></div>
           <div>Phone: <span class="font-medium">${farmer.phone || 'N/A'}</span></div>
         </div>
         <div class="text-right">
           <div>Statement Date: <span class="font-medium">${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
           <div>Active Advances: <span class="font-mono font-bold text-amber-700">${metrics.unpaidAdvancesCount} pending</span></div>
-          <div>Total Bills Settled: <span class="font-mono font-bold">${metrics.billsCount}</span></div>
+          <div>Bills Settled: <span class="font-mono font-bold">${metrics.billsCount}</span></div>
         </div>
       </div>
 
-      <!-- Financial Metrics Summary -->
       <div class="grid grid-cols-4 gap-2 mb-5 text-center text-xs">
         <div class="p-2.5 bg-slate-100 rounded border border-slate-200">
           <div class="text-slate-500 text-[10px] uppercase">Total Advances Given</div>
@@ -1715,7 +1851,7 @@ function viewFarmerStatement(farmerId) {
           <div class="font-mono font-extrabold text-sm text-amber-800">${formatINR(metrics.remainingAdvanceBalance)}</div>
         </div>
         <div class="p-2.5 bg-blue-50 rounded border border-blue-200">
-          <div class="text-blue-700 text-[10px] uppercase">Total Commodity Sales</div>
+          <div class="text-blue-700 text-[10px] uppercase">Total Produce Sales</div>
           <div class="font-mono font-bold text-sm text-blue-800">${formatINR(metrics.totalBillsValue)}</div>
         </div>
       </div>
@@ -1723,7 +1859,7 @@ function viewFarmerStatement(farmerId) {
       <!-- Advances Table -->
       <div class="mb-5">
         <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
-          <span>Advances Taken by Farmer:</span>
+          <span>Advances Taken by Farmer (Cash, Seeds & Fertilizer):</span>
           <span class="text-slate-500 font-normal">Count: ${advances.length}</span>
         </h4>
         <table class="w-full text-xs border border-slate-200">
@@ -1731,7 +1867,7 @@ function viewFarmerStatement(farmerId) {
             <tr>
               <th class="py-1.5 px-2 text-left">Adv #</th>
               <th class="py-1.5 px-2 text-left">Date</th>
-              <th class="py-1.5 px-2 text-left">Purpose</th>
+              <th class="py-1.5 px-2 text-left">Purpose / Item</th>
               <th class="py-1.5 px-2 text-right">Original</th>
               <th class="py-1.5 px-2 text-right">Deducted</th>
               <th class="py-1.5 px-2 text-right">Balance</th>
@@ -1743,7 +1879,7 @@ function viewFarmerStatement(farmerId) {
               <tr>
                 <td class="py-1.5 px-2 font-mono font-semibold">${a.advanceNumber}</td>
                 <td class="py-1.5 px-2 text-slate-500">${formatDate(a.date)}</td>
-                <td class="py-1.5 px-2 text-slate-700">${a.purpose}</td>
+                <td class="py-1.5 px-2 text-slate-700">${a.purpose === 'Seeds' ? '🌱 Seeds' : a.purpose}</td>
                 <td class="py-1.5 px-2 font-mono text-right font-medium">${formatINR(a.originalAmount)}</td>
                 <td class="py-1.5 px-2 font-mono text-right text-emerald-700">${formatINR(a.deductedAmount)}</td>
                 <td class="py-1.5 px-2 font-mono text-right font-bold text-amber-800">${formatINR(a.unpaidBalance)}</td>
@@ -1756,10 +1892,10 @@ function viewFarmerStatement(farmerId) {
         </table>
       </div>
 
-      <!-- Commodity Bills Table -->
+      <!-- Bills Table -->
       <div class="mb-5">
         <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
-          <span>Commodity Sales & Settlement Bills:</span>
+          <span>Produce Sales & Settlement Bills:</span>
           <span class="text-slate-500 font-normal">Count: ${bills.length}</span>
         </h4>
         ${bills.length > 0 ? `
@@ -1833,7 +1969,7 @@ function openAddFarmerModal() {
   document.getElementById('modal-farmer-title').innerText = 'Add New Farmer';
   document.getElementById('farmer-name').value = '';
   document.getElementById('farmer-phone').value = '';
-  document.getElementById('farmer-village').value = '';
+  document.getElementById('farmer-village').value = 'NEELAHALLI';
   document.getElementById('farmer-notes').value = '';
 
   openModal('modal-farmer-form');
@@ -1847,7 +1983,7 @@ function editFarmer(farmerId) {
   document.getElementById('modal-farmer-title').innerText = 'Edit Farmer Details';
   document.getElementById('farmer-name').value = farmer.name;
   document.getElementById('farmer-phone').value = farmer.phone || '';
-  document.getElementById('farmer-village').value = farmer.village || '';
+  document.getElementById('farmer-village').value = farmer.village || 'NEELAHALLI';
   document.getElementById('farmer-notes').value = farmer.notes || '';
 
   openModal('modal-farmer-form');
@@ -1863,7 +1999,7 @@ function handleSaveFarmer(e) {
   }
 
   const phone = document.getElementById('farmer-phone').value.trim();
-  const village = document.getElementById('farmer-village').value.trim();
+  const village = document.getElementById('farmer-village').value.trim() || 'NEELAHALLI';
   const notes = document.getElementById('farmer-notes').value.trim();
 
   if (editingFarmerId) {
@@ -1874,14 +2010,13 @@ function handleSaveFarmer(e) {
       f.village = village;
       f.notes = notes;
 
-      // Update cached names in advances & bills
       state.advances.filter(a => a.farmerId === f.id).forEach(a => a.farmerName = name);
       state.bills.filter(b => b.farmerId === f.id).forEach(b => {
         b.farmerName = name;
         b.farmerVillage = village;
       });
 
-      showToast(`Farmer ${name} updated successfully!`);
+      showToast(`Farmer ${name} updated!`);
     }
   } else {
     const newFarmer = {
@@ -1893,7 +2028,7 @@ function handleSaveFarmer(e) {
       createdAt: new Date().toISOString()
     };
     state.farmers.push(newFarmer);
-    showToast(`Farmer ${name} added successfully!`);
+    showToast(`Farmer ${name} added!`);
   }
 
   saveState();
@@ -1909,7 +2044,7 @@ function deleteFarmer(farmerId) {
   const billCount = state.bills.filter(b => b.farmerId === farmerId).length;
 
   if (advCount > 0 || billCount > 0) {
-    alert(`Cannot delete ${farmer.name} because they have ${advCount} advance(s) and ${billCount} bill(s) recorded in the ledger. Please delete the transactions first.`);
+    alert(`Cannot delete ${farmer.name} because they have ${advCount} advance(s) and ${billCount} bill(s) recorded. Please delete the transactions first.`);
     return;
   }
 
@@ -1922,29 +2057,35 @@ function deleteFarmer(farmerId) {
 }
 
 // ==========================================
-// SCENARIO SWITCHER & DATA BACKUP / RESTORE
+// SCENARIO SWITCHER & BACKUP
 // ==========================================
 
 function loadReferenceScenario(settled = true) {
-  const scenarioData = getReferenceScenarioData(settled);
-  state.farmers = scenarioData.farmers;
-  state.advances = scenarioData.advances;
-  state.bills = scenarioData.bills;
-  state.customCommodities = scenarioData.customCommodities;
-
-  saveState();
-  renderActiveView();
+  state.farmers = INITIAL_MANDI_FARMERS;
 
   if (settled) {
-    showToast('Loaded Reference Test Case (Settled): 4 Advances (₹66,000) & Bill #101 Moong (₹50,000) with ₹16,000 Leftover Carryover!');
+    state.advances = getInitialSeedAdvances();
+    state.bills = getInitialSeedBills();
+    showToast('Loaded Settled Reference Scenario (Bill #101 Moong ₹50k with ₹16k carryover)');
   } else {
-    showToast('Loaded Reference Test Case (Pre-Bill): 4 Unpaid Advances (₹1,000, ₹5,000, ₹10,000, ₹50,000) ready to create Bill #101!');
+    state.advances = [
+      { id: 'ADV-001', advanceNumber: 'ADV-001', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-08-10', originalAmount: 1000, deductedAmount: 0, unpaidBalance: 1000, purpose: 'Cultivation', notes: 'Initial Cultivation Advance', status: 'UNPAID', deductionHistory: [] },
+      { id: 'ADV-002', advanceNumber: 'ADV-002', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-09-05', originalAmount: 5000, deductedAmount: 0, unpaidBalance: 5000, purpose: 'Harvesting', notes: 'Harvesting Expenses', status: 'UNPAID', deductionHistory: [] },
+      { id: 'ADV-003', advanceNumber: 'ADV-003', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-09-25', originalAmount: 10000, deductedAmount: 0, unpaidBalance: 10000, purpose: 'Fertilizer & Pesticide', notes: 'Fertilizer & pesticide spray', status: 'UNPAID', deductionHistory: [] },
+      { id: 'ADV-004', advanceNumber: 'ADV-004', farmerId: 'FARMER-001', farmerName: 'Rameshwar Patil', date: '2026-10-15', originalAmount: 50000, deductedAmount: 0, unpaidBalance: 50000, purpose: 'Personal Use', notes: 'Emergency personal cash', status: 'UNPAID', deductionHistory: [] }
+    ];
+    state.bills = [];
+    showToast('Loaded Pre-Bill State (4 advances totaling ₹66,000 ready to settle)');
   }
+
+  saveState();
+  syncWithPaisabhai(false);
+  renderActiveView();
 }
 
 function exportDataJSON() {
   const jsonStr = JSON.stringify({
-    version: '2.0',
+    version: '2.1',
     exportDate: new Date().toISOString(),
     farmers: state.farmers,
     advances: state.advances,
@@ -1959,7 +2100,7 @@ function exportDataJSON() {
   a.download = `GTCO_LEDGER_BACKUP_${new Date().toISOString().split('T')[0]}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('JSON Backup downloaded successfully.');
+  showToast('JSON Backup downloaded.');
 }
 
 function importDataJSON(e) {
@@ -1970,9 +2111,7 @@ function importDataJSON(e) {
   reader.onload = (event) => {
     try {
       const parsed = JSON.parse(event.target.result);
-      if (!parsed.farmers || !parsed.advances) {
-        throw new Error('Invalid backup file schema');
-      }
+      if (!parsed.farmers || !parsed.advances) throw new Error('Invalid backup schema');
 
       state.farmers = parsed.farmers || [];
       state.advances = parsed.advances || [];
@@ -1981,9 +2120,9 @@ function importDataJSON(e) {
 
       saveState();
       renderActiveView();
-      showToast('Data successfully restored from backup!');
+      showToast('Data restored from backup!');
     } catch (err) {
-      alert('Error parsing backup file: ' + err.message);
+      alert('Error parsing backup: ' + err.message);
     }
   };
   reader.readAsText(file);
@@ -1991,7 +2130,7 @@ function importDataJSON(e) {
 
 function exportExcelLedger() {
   if (typeof XLSX === 'undefined') {
-    alert('SheetJS Excel library is loading. Please try again in a moment.');
+    alert('SheetJS Excel library loading. Please try again.');
     return;
   }
 
@@ -2002,15 +2141,16 @@ function exportExcelLedger() {
     'Advance ID': a.advanceNumber,
     'Date': a.date,
     'Farmer Name': a.farmerName,
-    'Purpose': a.purpose,
+    'Purpose / Input': a.purpose,
     'Original Amount (INR)': a.originalAmount,
     'Deducted Amount (INR)': a.deductedAmount,
     'Unpaid Balance (INR)': a.unpaidBalance,
     'Status': a.status,
+    'Notes / Details': a.notes || '',
     'Deduction History': (a.deductionHistory || []).map(h => `${h.billNumber} (${h.commodity}: ₹${h.amountDeducted})`).join('; ')
   }));
   const wsAdv = XLSX.utils.json_to_sheet(advData);
-  XLSX.utils.book_append_sheet(wb, wsAdv, 'Advances');
+  XLSX.utils.book_append_sheet(wb, wsAdv, 'Advances & Inputs');
 
   // 2. Bills Sheet
   const billData = state.bills.map(b => ({
@@ -2027,7 +2167,7 @@ function exportExcelLedger() {
     'Leftover Carryover (INR)': b.leftoverAdvancesCarriedForward || 0
   }));
   const wsBills = XLSX.utils.json_to_sheet(billData);
-  XLSX.utils.book_append_sheet(wb, wsBills, 'Bills');
+  XLSX.utils.book_append_sheet(wb, wsBills, 'Produce Bills');
 
   // 3. Farmers Summary Sheet
   const farmerData = state.farmers.map(f => {
@@ -2039,7 +2179,7 @@ function exportExcelLedger() {
       'Total Advances (INR)': m.totalAdvances,
       'Total Deducted (INR)': m.totalDeducted,
       'Remaining Balance (INR)': m.remainingAdvanceBalance,
-      'Total Commodity Sales (INR)': m.totalBillsValue
+      'Total Produce Bills (INR)': m.totalBillsValue
     };
   });
   const wsFarmers = XLSX.utils.json_to_sheet(farmerData);
@@ -2049,7 +2189,6 @@ function exportExcelLedger() {
   showToast('Excel report generated and downloaded!');
 }
 
-// Toast notification helper
 function showToast(message) {
   const toast = document.getElementById('toast');
   if (!toast) return;
@@ -2072,25 +2211,60 @@ function showToast(message) {
 }
 
 // ==========================================
-// INITIALIZATION
+// INITIALIZATION & EVENT LISTENERS
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
   setTab('dashboard');
 
-  // Set today's date on modal date inputs
   const today = new Date().toISOString().split('T')[0];
   const advDate = document.getElementById('advance-date');
   if (advDate) advDate.value = today;
   const billDate = document.getElementById('bill-date');
   if (billDate) billDate.value = today;
 
+  // Listen to cross-tab storage changes from Paisabhai or Stock Tracker
+  window.addEventListener('storage', (e) => {
+    if (e.key === PAISABHAI_STORAGE_KEY || e.key === STOCK_TRACKER_STORAGE_KEY) {
+      syncAllEcosystemData(false);
+    }
+  });
+
+  window.addEventListener('gtco_ledger_updated', () => {
+    loadState();
+    renderActiveView();
+  });
+
+  // URL query parameter deep linking: ?farmer=...
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const farmerParam = urlParams.get('farmer');
+    if (farmerParam) {
+      const match = state.farmers.find(f => f.name.toLowerCase() === farmerParam.toLowerCase() || f.id.toLowerCase() === farmerParam.toLowerCase());
+      if (match) {
+        state.filters.advanceFarmer = match.id;
+        state.filters.billFarmer = match.id;
+        setTab('advances');
+        showToast(`Filtered for farmer: ${match.name}`);
+      }
+    }
+  } catch (e) {}
+
   // Filter Listeners
   const filterAdvFarmer = document.getElementById('filter-advance-farmer');
   if (filterAdvFarmer) {
     filterAdvFarmer.addEventListener('change', (e) => {
       state.filters.advanceFarmer = e.target.value;
+      renderAdvancesLedger();
+      if (window.lucide) window.lucide.createIcons();
+    });
+  }
+
+  const filterAdvPurpose = document.getElementById('filter-advance-purpose');
+  if (filterAdvPurpose) {
+    filterAdvPurpose.addEventListener('change', (e) => {
+      state.filters.advancePurpose = e.target.value;
       renderAdvancesLedger();
       if (window.lucide) window.lucide.createIcons();
     });

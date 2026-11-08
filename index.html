@@ -71,46 +71,66 @@
           </div>
         </div>
 
-        <!-- Quick Actions & Scenario Loader -->
+        <!-- Cross-App Integration Links & Quick Actions -->
         <div class="flex items-center space-x-2">
+          <!-- Link to Paisabhai Cashbook -->
+          <a href="https://smpneel0212-commits.github.io/Paisabhai/" target="_blank" title="Open Paisabhai Daily Cashbook (GTCO Linked)" class="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 transition shadow-2xs">
+            <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-700"></i>
+            <span>Paisabhai</span>
+            <span class="text-[10px] bg-indigo-600 text-white px-1.5 py-0.2 rounded font-mono">Sync</span>
+          </a>
+
+          <!-- Link to GTCO-STOCK-TRACKEr -->
+          <a href="https://smpneel0212-commits.github.io/GTCO-STOCK-TRACKEr/" target="_blank" title="Open GTCO Stock & Inward Produce Tracker" class="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition shadow-2xs">
+            <i data-lucide="boxes" class="w-3.5 h-3.5 text-amber-700"></i>
+            <span>Stock Tracker</span>
+            <span class="text-[10px] bg-amber-600 text-white px-1.5 py-0.2 rounded font-mono">Seeds</span>
+          </a>
+
           <!-- Scenario Selector Dropdown -->
           <div class="relative inline-block text-left group">
-            <button class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition shadow-xs">
-              <i data-lucide="flask-conical" class="w-4 h-4 text-amber-700"></i>
-              <span class="hidden sm:inline">Reference Scenario</span>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-amber-700"></i>
+            <button class="inline-flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 transition">
+              <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-slate-600"></i>
+              <span class="hidden md:inline">Demo Test</span>
+              <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500"></i>
             </button>
             <div class="hidden group-hover:block absolute right-0 mt-1 w-72 rounded-xl shadow-lg bg-white ring-1 ring-black/5 divide-y divide-slate-100 focus:outline-none z-50">
               <div class="p-2">
-                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Trader Test Scenario</div>
+                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Reference Scenario</div>
                 <button onclick="loadReferenceScenario(true)" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 transition flex items-start space-x-2">
                   <i data-lucide="check-check" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>
                   <div>
-                    <div class="font-semibold">Load Settled Scenario (Bill #101)</div>
-                    <div class="text-[11px] text-slate-500">₹50k Moong bill settled with ₹16k leftover carryover</div>
+                    <div class="font-semibold">Settled Moong Bill #101</div>
+                    <div class="text-[11px] text-slate-500">₹50k bill settled with ₹16k leftover carryover</div>
                   </div>
                 </button>
                 <button onclick="loadReferenceScenario(false)" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-amber-50 text-slate-800 hover:text-amber-900 transition flex items-start space-x-2 mt-1">
                   <i data-lucide="play" class="w-4 h-4 text-amber-600 mt-0.5 shrink-0"></i>
                   <div>
-                    <div class="font-semibold">Load Pre-Bill Scenario</div>
-                    <div class="text-[11px] text-slate-500">4 unpaid advances ready to create new bill</div>
+                    <div class="font-semibold">Pre-Bill State</div>
+                    <div class="text-[11px] text-slate-500">4 unpaid advances ready to test settlement</div>
                   </div>
                 </button>
               </div>
             </div>
           </div>
 
+          <!-- Sync Now Button -->
+          <button onclick="syncAllEcosystemData(true)" class="inline-flex items-center space-x-1 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 transition" title="Sync live entries from Paisabhai & Stock Tracker">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-700"></i>
+            <span class="hidden md:inline">Sync Paisabhai</span>
+          </button>
+
           <!-- Record Advance Button -->
-          <button onclick="openRecordAdvanceModal()" class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition shadow-sm">
+          <button onclick="openRecordAdvanceModal()" class="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition shadow-sm">
             <i data-lucide="hand-coins" class="w-4 h-4"></i>
-            <span class="hidden md:inline">Record Advance</span>
+            <span>+ Advance / Seeds</span>
           </button>
 
           <!-- New Bill Button -->
-          <button onclick="openNewBillModal()" class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition shadow-sm">
+          <button onclick="openNewBillModal()" class="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition shadow-sm">
             <i data-lucide="file-plus" class="w-4 h-4"></i>
-            <span class="hidden md:inline">New Commodity Bill</span>
+            <span class="hidden md:inline">New Bill</span>
           </button>
 
           <!-- Backup / Excel Menu -->
@@ -151,7 +171,7 @@
         </button>
         <button id="nav-advances" onclick="setTab('advances')" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center space-x-2 transition">
           <i data-lucide="hand-coins" class="w-4 h-4"></i>
-          <span>Advances Ledger & Audit</span>
+          <span>Advances & Seeds Ledger</span>
         </button>
         <button id="nav-bills" onclick="setTab('bills')" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center space-x-2 transition">
           <i data-lucide="receipt" class="w-4 h-4"></i>
@@ -168,36 +188,37 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-    <!-- REFERENCE SCENARIO BANNER -->
-    <div class="mb-6 p-4 rounded-xl border border-amber-200 bg-amber-50/70 shadow-xs no-print">
+    <!-- ECOSYSTEM INTEGRATION BANNER (PAISABHAI + GTCO-LEDGER + STOCK TRACKER) -->
+    <div class="mb-6 p-4 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-white to-emerald-50/80 shadow-xs no-print">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div class="flex items-start space-x-3">
-          <div class="p-2 bg-amber-100 text-amber-900 rounded-lg shrink-0 mt-0.5">
-            <i data-lucide="scale" class="w-5 h-5 text-amber-800"></i>
+          <div class="p-2 bg-indigo-100 text-indigo-900 rounded-lg shrink-0 mt-0.5">
+            <i data-lucide="link-2" class="w-5 h-5 text-indigo-800"></i>
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <h3 class="font-bold text-sm text-amber-950">APMC Mandi Workflow & Concrete Reference Scenario</h3>
-              <span class="text-[10px] font-mono font-bold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded">
-                Rameshwar Patil (Neelahalli)
+              <h3 class="font-bold text-sm text-slate-900">GTCO Mandi Ecosystem Integration</h3>
+              <span id="sync-status-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                ● Live 2-Way Synced
               </span>
             </div>
-            <p class="text-xs text-amber-800 mt-1 leading-relaxed">
-              <strong>Advances Issued:</strong> ₹1,000 (Cultivation) + ₹5,000 (Harvesting) + ₹10,000 (Fertilizers) + ₹50,000 (Personal) = <strong>₹66,000 Total</strong>.
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+              <strong>📖 Paisabhai Cashbook:</strong> All GTCO entries (Advances, Fertilizers, DAP, Pesticides, Crop Medicines) automatically sync here. Any advance entered in GTCO-LEDGER also enters Paisabhai!
               <br>
-              <strong>Bill #101 Settled:</strong> Farmer sold <strong>Moong (Green Gram)</strong> for <strong>₹50,000</strong>. Advances #1, #2, #3 were fully paid (₹16,000) and ₹34,000 was deducted from Advance #4.
-              <strong>Leftover Advance:</strong> Exactly <strong>₹16,000</strong> remains marked as <strong>UNPAID / PARTIALLY PAID</strong> and carries forward for future bills (Tur, Chana, or Urad).
+              <strong>🌱 Seeds & Harvest Return:</strong> Record Seeds given to farmers as Advances. When farmers return harvested produce (Moong, Urad, Tur, Chana recorded in Stock Tracker), easily settle & deduct against the bill!
             </p>
           </div>
         </div>
 
         <div class="flex items-center space-x-2 shrink-0 self-end lg:self-center">
-          <button onclick="loadReferenceScenario(false)" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 transition shadow-xs">
-            Reset to Pre-Bill (Test Settle)
-          </button>
-          <button onclick="loadReferenceScenario(true)" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition shadow-xs">
-            View Settled Result
-          </button>
+          <a href="https://smpneel0212-commits.github.io/Paisabhai/" target="_blank" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-indigo-300 text-indigo-900 hover:bg-indigo-50 transition shadow-xs flex items-center space-x-1">
+            <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-700"></i>
+            <span>Paisabhai Cashbook ↗</span>
+          </a>
+          <a href="https://smpneel0212-commits.github.io/GTCO-STOCK-TRACKEr/" target="_blank" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 transition shadow-xs flex items-center space-x-1">
+            <i data-lucide="boxes" class="w-3.5 h-3.5 text-amber-700"></i>
+            <span>Stock Tracker ↗</span>
+          </a>
         </div>
       </div>
     </div>
@@ -213,7 +234,7 @@
             <i data-lucide="hand-coins" class="w-4 h-4 text-slate-400"></i>
           </div>
           <div id="dash-total-advances" class="text-xl font-bold font-mono text-slate-800">₹0</div>
-          <div class="text-[11px] text-slate-400 mt-1"><span id="dash-advances-count" class="font-bold">0</span> records</div>
+          <div class="text-[11px] text-slate-400 mt-1"><span id="dash-advances-count" class="font-bold">0</span> records (Cash, Seeds & Fert)</div>
         </div>
 
         <!-- Total Deducted in Bills -->
@@ -223,7 +244,7 @@
             <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
           </div>
           <div id="dash-total-deducted" class="text-xl font-bold font-mono text-emerald-700">₹0</div>
-          <div class="text-[11px] text-emerald-600 mt-1">Adjusted against produce</div>
+          <div class="text-[11px] text-emerald-600 mt-1">Adjusted against produce return</div>
         </div>
 
         <!-- Unpaid Advance Balance (Carryover) -->
@@ -257,17 +278,36 @@
         </div>
       </div>
 
-      <!-- Commodity Pulses Distribution -->
-      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h3 class="font-bold text-sm text-slate-800">Commodity Sales Breakdown</h3>
-            <p class="text-xs text-slate-500">Sales value by pulse crop (Tur, Moong, Chana, Urad, & custom)</p>
+      <!-- Advance Types & Commodity Distribution -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Advance Breakdown by Purpose -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-bold text-sm text-slate-800">Advances by Purpose</h3>
+              <p class="text-xs text-slate-500">Seeds, Fertilizers, Pesticides & Cultivation cash</p>
+            </div>
+            <span class="text-xs font-mono font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              Mandi Inputs
+            </span>
           </div>
-          <span class="text-xs font-medium text-slate-500">Mandi Pulse Ledger</span>
+          <div id="dash-purpose-breakdown" class="space-y-2">
+            <!-- Populated by JS -->
+          </div>
         </div>
-        <div id="dash-commodity-breakdown" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          <!-- Populated by JS -->
+
+        <!-- Commodity Sales Distribution -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-bold text-sm text-slate-800">Commodity Sales Breakdown</h3>
+              <p class="text-xs text-slate-500">Produce returned: Tur, Moong, Chana, Urad</p>
+            </div>
+            <span class="text-xs font-medium text-slate-500">Harvest Bills</span>
+          </div>
+          <div id="dash-commodity-breakdown" class="grid grid-cols-2 gap-2">
+            <!-- Populated by JS -->
+          </div>
         </div>
       </div>
 
@@ -313,6 +353,17 @@
             <option value="all">All Farmers</option>
           </select>
 
+          <!-- Purpose Filter -->
+          <select id="filter-advance-purpose" class="text-xs border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-1 focus:ring-emerald-500">
+            <option value="all">All Purposes</option>
+            <option value="Seeds">🌱 Seeds Advance</option>
+            <option value="Fertilizer & Pesticide">🧪 Fertilizer & Pesticides</option>
+            <option value="Cultivation">🚜 Cultivation Advance</option>
+            <option value="Harvesting">🌾 Harvesting Expenses</option>
+            <option value="Personal Use">💵 Personal Use</option>
+            <option value="Other">Other</option>
+          </select>
+
           <!-- Status Filter -->
           <select id="filter-advance-status" class="text-xs border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-1 focus:ring-emerald-500">
             <option value="all">All Statuses</option>
@@ -331,7 +382,7 @@
         <div class="flex items-center space-x-2">
           <button onclick="openRecordAdvanceModal()" class="px-3 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition flex items-center space-x-1.5">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-            <span>Record Advance</span>
+            <span>Record Advance / Seeds</span>
           </button>
         </div>
       </div>
@@ -344,7 +395,7 @@
               <tr>
                 <th class="py-3 px-4">Adv #</th>
                 <th class="py-3 px-4">Date</th>
-                <th class="py-3 px-4">Farmer & Purpose / Deduction Audit</th>
+                <th class="py-3 px-4">Farmer & Purpose / Inputs / Deduction Audit</th>
                 <th class="py-3 px-4 text-right">Original (₹)</th>
                 <th class="py-3 px-4 text-right">Deducted (₹)</th>
                 <th class="py-3 px-4 text-right">Unpaid Balance (₹)</th>
@@ -440,23 +491,23 @@
   <!-- FOOTER -->
   <footer class="bg-white border-t border-slate-200 py-4 mt-auto no-print">
     <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-      GTCO-LEDGER • Gururaj Trading Company Mandi Ledger Platform • Built for APMC Pulse & Commodity Merchants
+      GTCO-LEDGER • Gururaj Trading Company Mandi Ledger Platform • Synced with Paisabhai & GTCO Stock Tracker
     </div>
   </footer>
 
   <!-- ========================================== -->
-  <!-- MODAL 1: RECORD ADVANCE                    -->
+  <!-- MODAL 1: RECORD ADVANCE / SEEDS / FERT     -->
   <!-- ========================================== -->
-  <div id="modal-record-advance" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 modal-backdrop no-print">
-    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden border border-slate-200">
+  <div id="modal-record-advance" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 modal-backdrop no-print overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full my-8 overflow-hidden border border-slate-200">
       <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-amber-50/50">
         <div class="flex items-center space-x-2">
           <div class="p-1.5 bg-amber-100 text-amber-800 rounded-lg">
             <i data-lucide="hand-coins" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="font-bold text-base text-slate-900">Record Farmer Advance</h3>
-            <p class="text-xs text-slate-500">Issue cash advance for cultivation, harvest, or personal use</p>
+            <h3 class="font-bold text-base text-slate-900">Record Farmer Advance / Seeds / Fertilizers</h3>
+            <p class="text-xs text-slate-500">Issue cash advance, seeds, fertilizers or pesticides to farmer</p>
           </div>
         </div>
         <button onclick="closeModal('modal-record-advance')" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
@@ -486,32 +537,85 @@
           </div>
         </div>
 
-        <!-- Amount & Purpose -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Amount (₹) *</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-xs text-slate-400 font-mono">₹</span>
-              <input type="number" id="advance-amount" required min="1" step="any" placeholder="e.g. 5000" class="w-full text-xs font-mono font-bold pl-7 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-1 focus:ring-emerald-500">
+        <!-- Purpose Category -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Purpose Category *</label>
+          <select id="advance-purpose" onchange="onAdvancePurposeChanged()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-medium focus:ring-1 focus:ring-emerald-500">
+            <option value="Seeds">🌱 Seeds Advance (Given to Farmer)</option>
+            <option value="Fertilizer & Pesticide">🧪 Fertilizers, DAP & Pesticides</option>
+            <option value="Cultivation" selected>🚜 Cultivation (Land prep)</option>
+            <option value="Harvesting">🌾 Harvesting Expenses (Labor)</option>
+            <option value="Personal Use">💵 Personal Emergency Cash</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Section: Seeds Details -->
+        <div id="advance-seeds-group" class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-3 hidden">
+          <div class="text-xs font-bold text-emerald-900 flex items-center space-x-1">
+            <i data-lucide="sprout" class="w-4 h-4 text-emerald-700"></i>
+            <span>Seeds Distribution Specification</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-800 mb-1">Seed Variety</label>
+              <select id="seed-variety" class="w-full text-xs p-2 border border-emerald-300 rounded-lg bg-white">
+                <option value="Urad (Black Gram) Seeds">Urad (Black Gram) Seeds</option>
+                <option value="Moong (Green Gram) Seeds">Moong (Green Gram) Seeds</option>
+                <option value="Tur (Pigeon Pea) Seeds">Tur (Pigeon Pea) Seeds</option>
+                <option value="Chana (Chickpea) Seeds">Chana (Chickpea) Seeds</option>
+                <option value="Custom Seeds">Custom Seeds</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-emerald-800 mb-1">Seed Quantity</label>
+              <div class="flex space-x-1">
+                <input type="number" id="seed-qty" step="any" placeholder="Qty" oninput="calculateSeedOrFertTotal()" class="w-2/3 text-xs p-2 border border-emerald-300 rounded-lg">
+                <select id="seed-unit" class="w-1/3 text-xs p-2 border border-emerald-300 rounded-lg bg-white">
+                  <option value="Bags">Bags</option>
+                  <option value="Kg">Kg</option>
+                </select>
+              </div>
             </div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Purpose Category *</label>
-            <select id="advance-purpose" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-1 focus:ring-emerald-500">
-              <option value="Cultivation">Cultivation (Land prep)</option>
-              <option value="Seeds">Seeds</option>
-              <option value="Fertilizer & Pesticide">Fertilizer & Pesticide</option>
-              <option value="Harvesting">Harvesting Expenses</option>
-              <option value="Personal Use">Personal Use</option>
-              <option value="Other">Other</option>
-            </select>
+            <label class="block text-[11px] font-semibold text-emerald-800 mb-1">Rate per Unit (₹)</label>
+            <input type="number" id="seed-rate" step="any" placeholder="e.g. 4500 per bag" oninput="calculateSeedOrFertTotal()" class="w-full text-xs font-mono p-2 border border-emerald-300 rounded-lg bg-white">
           </div>
+        </div>
+
+        <!-- Dynamic Section: Fertilizer / Pesticide Details -->
+        <div id="advance-fert-group" class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-3 hidden">
+          <div class="text-xs font-bold text-blue-900 flex items-center space-x-1">
+            <i data-lucide="flask-conical" class="w-4 h-4 text-blue-700"></i>
+            <span>Fertilizer / Pesticide Distribution Details</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-blue-800 mb-1">Product Type</label>
+              <input type="text" id="fert-product" placeholder="e.g. DAP 50kg, Urea, Spray" class="w-full text-xs p-2 border border-blue-300 rounded-lg bg-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-blue-800 mb-1">Quantity</label>
+              <input type="number" id="fert-qty" step="any" placeholder="e.g. 2 bags / bottles" oninput="calculateSeedOrFertTotal()" class="w-full text-xs p-2 border border-blue-300 rounded-lg bg-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- Advance Amount -->
+        <div>
+          <label class="block text-xs font-bold text-slate-800 mb-1">Total Advance Amount (₹) *</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-xs text-slate-400 font-mono font-bold">₹</span>
+            <input type="number" id="advance-amount" required min="1" step="any" placeholder="e.g. 5000" class="w-full text-sm font-mono font-extrabold pl-7 pr-3 py-2.5 border-2 border-amber-500 rounded-lg focus:ring-1 focus:ring-amber-500 bg-white">
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">This advance will be deducted when the farmer brings produce to the shop.</p>
         </div>
 
         <!-- Custom Notes -->
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Notes / Description (Optional)</label>
-          <textarea id="advance-notes" rows="2" placeholder="e.g. For labor payment during harvesting" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-1 focus:ring-emerald-500"></textarea>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Notes / Remarks (Optional)</label>
+          <textarea id="advance-notes" rows="2" placeholder="e.g. Given 2 bags Urad seeds for kharif sowing; return expected in Mandi" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-1 focus:ring-emerald-500"></textarea>
         </div>
 
         <!-- Action buttons -->
@@ -519,8 +623,9 @@
           <button type="button" onclick="closeModal('modal-record-advance')" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">
             Cancel
           </button>
-          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition shadow-sm">
-            Save Advance
+          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition shadow-sm flex items-center space-x-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Save & Sync Advance</span>
           </button>
         </div>
       </form>
@@ -538,8 +643,8 @@
             <i data-lucide="receipt" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="font-bold text-base text-slate-900">New Commodity Bill & Advance Settlement</h3>
-            <p class="text-xs text-slate-500">Generate produce bill and deduct outstanding farmer advances</p>
+            <h3 class="font-bold text-base text-slate-900">New Produce Bill & Advance Settlement</h3>
+            <p class="text-xs text-slate-500">Record produce return & deduct farmer's advances (Cash, Seeds & Fert)</p>
           </div>
         </div>
         <button onclick="closeModal('modal-new-bill')" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
@@ -556,8 +661,8 @@
           </select>
         </div>
 
-        <!-- Selected Farmer Summary Banner -->
-        <div id="bill-farmer-summary-banner" class="hidden p-3 bg-slate-50 border border-slate-200 rounded-lg">
+        <!-- Selected Farmer Summary Banner & Stock Tracker Inward Lots -->
+        <div id="bill-farmer-summary-banner" class="hidden p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
           <!-- Populated by JS -->
         </div>
 
@@ -575,7 +680,7 @@
 
         <!-- Commodity Selection -->
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Commodity Sold *</label>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Commodity Sold / Returned *</label>
           <select id="bill-commodity" onchange="onBillCommodityChanged()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-medium">
             <option value="Moong (Green Gram)">Moong (Green Gram) / ಹೆಸರು</option>
             <option value="Tur (Pigeon Pea)">Tur (Pigeon Pea) / ತೊಗರಿ</option>
@@ -593,7 +698,7 @@
 
         <!-- Bill Calculation Options: Qty x Rate or Direct Gross -->
         <div class="p-3.5 bg-slate-50/70 border border-slate-200 rounded-xl space-y-3">
-          <div class="text-xs font-bold text-slate-700 uppercase tracking-wider">Bill Value Calculator</div>
+          <div class="text-xs font-bold text-slate-700 uppercase tracking-wider">Produce Value Calculator</div>
           <div class="grid grid-cols-3 gap-2">
             <div>
               <label class="block text-[11px] font-medium text-slate-600 mb-1">Quantity</label>
@@ -614,7 +719,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-800 mb-1">Gross Commodity Bill Value (₹) *</label>
+            <label class="block text-xs font-bold text-slate-800 mb-1">Gross Produce Bill Value (₹) *</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-xs text-slate-400 font-mono">₹</span>
               <input type="number" id="bill-gross-amount" required step="any" placeholder="e.g. 50000" oninput="updateBillSettlementCalculations()" class="w-full text-sm font-mono font-extrabold pl-7 pr-3 py-2 border-2 border-emerald-500 rounded-lg bg-white">
@@ -631,7 +736,7 @@
               <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
                 Outstanding Advances Deduction Engine
               </h4>
-              <p class="text-[11px] text-slate-500">Select which advances to deduct from this bill</p>
+              <p class="text-[11px] text-slate-500">Deduct Cash Advances, Seeds & Fertilizers from this produce return</p>
             </div>
 
             <!-- Auto-Fit Deduction Controls -->
@@ -655,7 +760,7 @@
         <!-- REAL-TIME SETTLEMENT SUMMARY BOX -->
         <div class="bg-slate-900 text-white p-4 rounded-xl space-y-2 font-mono text-xs shadow-md">
           <div class="flex justify-between items-center text-slate-300">
-            <span>Gross Commodity Bill Value:</span>
+            <span>Gross Produce Bill Value:</span>
             <span id="calc-gross-value" class="text-sm font-bold text-white">₹0</span>
           </div>
 
@@ -684,7 +789,7 @@
         <!-- Notes -->
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">Bill Notes (Optional)</label>
-          <input type="text" id="bill-notes" placeholder="e.g. Settle advance #1, #2, #3, remaining balance carries over" class="w-full text-xs border border-slate-300 rounded-lg p-2.5">
+          <input type="text" id="bill-notes" placeholder="e.g. Produce return settling seed advances, leftover carries forward" class="w-full text-xs border border-slate-300 rounded-lg p-2.5">
         </div>
 
         <!-- Action buttons -->
@@ -694,7 +799,7 @@
           </button>
           <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition shadow-sm flex items-center space-x-1.5">
             <i data-lucide="check-check" class="w-4 h-4"></i>
-            <span>Confirm & Settle Bill</span>
+            <span>Confirm & Settle Produce Bill</span>
           </button>
         </div>
       </form>
