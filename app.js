@@ -12,7 +12,7 @@
 // CONSTANTS & STORE CONFIGURATION
 // ==========================================
 
-const STORAGE_KEY = 'GTCO_LEDGER_DATA_V4';
+const STORAGE_KEY = 'GTCO_LEDGER_DATA_V5';
 const PAISABHAI_STORAGE_KEY = 'paisabhai_ledger_store_v3';
 const STOCK_TRACKER_STORAGE_KEY = 'gtco_stock_tracker_v3';
 
@@ -106,6 +106,11 @@ function formatDate(dateStr) {
 
 function loadState() {
   try {
+    // Purge old historical cache versions
+    ['GTCO_LEDGER_DATA_V4', 'gtco_trading_data_v4', 'gtco_trading_data_v3', 'gtco_trading_data_v2', 'gtco_trading_data_v1'].forEach(k => {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
+
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -115,7 +120,7 @@ function loadState() {
       state.expenses = parsed.expenses || [];
       state.customCommodities = parsed.customCommodities || [];
     } else {
-      // First run or migrated to V4: Load directly from Master Data (ledger-data.js)
+      // First run or migrated to V5: Load directly from 2026 Master Data (ledger-data.js)
       if (typeof GTCO_MASTER_DATA !== 'undefined') {
         state.farmers = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.farmers || []));
         state.advances = JSON.parse(JSON.stringify(GTCO_MASTER_DATA.advances || []));
