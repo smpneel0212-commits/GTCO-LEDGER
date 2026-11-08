@@ -592,7 +592,7 @@ function renderAdvancesLedger() {
   if (paginatedList.length === 0) {
     container.innerHTML = `
       <tr>
-        <td colspan="7" class="py-12 text-center text-slate-400 italic">
+        <td colspan="8" class="py-12 text-center text-slate-400 italic">
           No advances found matching your filter criteria.
         </td>
       </tr>
@@ -616,7 +616,7 @@ function renderAdvancesLedger() {
             <div class="flex items-center justify-between text-xs bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
               <div class="flex items-center space-x-1">
                 <span class="font-mono font-bold text-emerald-700">${d.billNumber || d.billId}</span>
-                <span class="text-slate-600">• ${d.commodity || ''}</span>
+                <span class="text-slate-600">&bull; ${d.commodity || ''}</span>
                 <span class="text-slate-400 text-[10px]">(${formatDate(d.deductionDate)})</span>
               </div>
               <span class="font-mono font-semibold text-emerald-800">Deducted: ${formatINR(d.amountDeducted)}</span>
@@ -626,7 +626,10 @@ function renderAdvancesLedger() {
       </div>
     ` : '';
 
-    const purposeIcon = adv.purpose === 'Seeds' ? '🌱' : (adv.purpose === 'Fertilizer & Pesticide' ? '🧪' : (adv.purpose === 'Old Balance / Lekka' ? '📜' : '🌾'));
+    const purposeIcon = adv.purpose === 'Seeds' ? '\uD83C\uDF31' : (adv.purpose === 'Fertilizer & Pesticide' ? '\uD83E\uDDEA' : (adv.purpose === 'Old Balance / Lekka' ? '\uD83D\uDCDC' : '\uD83C\uDF3E'));
+    const isPaid = adv.status === 'PAID';
+    const isPartial = adv.status === 'PARTIALLY PAID';
+    const currentDeducted = Number(adv.deductedAmount) || 0;
 
     return `
       <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
@@ -651,19 +654,72 @@ function renderAdvancesLedger() {
         <td class="py-3 px-4 font-mono font-bold text-sm text-slate-800 text-right whitespace-nowrap align-top">
           ${formatINR(adv.originalAmount)}
         </td>
-        <td class="py-3 px-4 font-mono font-semibold text-sm text-emerald-700 text-right whitespace-nowrap align-top">
-          ${formatINR(adv.deductedAmount)}
+        <td class="py-3 px-3 font-mono text-right whitespace-nowrap align-top">
+          <div class="flex flex-col items-end space-y-1">
+            <div class="flex items-center space-x-1 justify-end">
+              <span class="text-xs text-slate-400 font-mono">&#8377;</span>
+              <input
+                type="number"
+                min="0"
+                max="${adv.originalAmount}"
+                step="any"
+                value="${currentDeducted}"
+                id="input-deduct-${adv.id}"
+                class="w-24 text-right font-mono font-bold text-xs py-1 px-1.5 border rounded border-slate-300 focus:outline-hidden focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white"
+                placeholder="0"
+                onkeydown="if(event.key==='Enter'){ this.blur(); }"
+                onchange="updateAdvanceDeduction('${adv.id}', this.value)"
+                title="Type deducted amount and press Enter or blur to save"
+              />
+            </div>
+            <div class="flex items-center space-x-1 text-[10px]">
+              <button
+                type="button"
+                onclick="setAdvanceFullPaid('${adv.id}')"
+                class="px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded transition cursor-pointer"
+                title="Mark full deduction (${formatINR(adv.originalAmount)})"
+              >
+                Full
+              </button>
+              <button
+                type="button"
+                onclick="updateAdvanceDeduction('${adv.id}', 0)"
+                class="px-1.5 py-0.5 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded transition cursor-pointer"
+                title="Reset deduction to 0"
+              >
+                Zero
+              </button>
+            </div>
+          </div>
         </td>
-        <td class="py-3 px-4 font-mono font-bold text-sm text-amber-700 text-right whitespace-nowrap align-top">
+        <td class="py-3 px-4 font-mono font-bold text-sm text-right whitespace-nowrap align-top ${adv.unpaidBalance > 0 ? 'text-amber-700' : 'text-slate-400'}">
           ${formatINR(adv.unpaidBalance)}
         </td>
-        <td class="py-3 px-4 text-center whitespace-nowrap align-top">
-          <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full ${getStatusBadgeClass(adv.status)}">
+        <td class="py-3 px-3 text-center whitespace-nowrap align-top">
+          <div class="flex flex-col items-center justify-center space-y-1">
+            <input
+              type="checkbox"
+              id="check-paid-${adv.id}"
+              ${isPaid ? 'checked' : ''}
+              onchange="toggleAdvancePaidStatus('${adv.id}', this.checked)"
+              class="w-4 h-4 text-emerald-600 bg-white border-slate-300 rounded focus:ring-emerald-500 cursor-pointer accent-emerald-600"
+              title="${isPaid ? 'Marked as Paid. Click to mark Unpaid.' : 'Click to mark as Paid'}"
+            />
+            <span class="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded ${isPaid ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : (isPartial ? 'text-amber-700 bg-amber-50 border border-amber-200' : 'text-slate-500 bg-slate-100 border border-slate-200')}">
+              ${isPaid ? 'PAID' : (isPartial ? 'PARTIAL' : 'PENDING')}
+            </span>
+          </div>
+        </td>
+        <td class="py-3 px-3 text-center whitespace-nowrap align-top">
+          <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full ${getStatusBadgeClass(adv.status)}">
             ${adv.status}
           </span>
           <div class="mt-1.5 flex items-center justify-center space-x-1">
             <button onclick="viewFarmerStatement('${adv.farmerId}')" class="text-xs text-emerald-700 hover:text-emerald-900 font-semibold p-1" title="View Full Ledger Statement">
               Statement
+            </button>
+            <button onclick="openEditAdvanceModal('${adv.id}')" class="text-slate-400 hover:text-blue-600 p-1 rounded transition" title="Edit Advance Details">
+              <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
             </button>
             <button onclick="deleteAdvance('${adv.id}')" class="text-slate-400 hover:text-red-600 p-1 rounded transition" title="Delete Advance">
               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -1049,11 +1105,39 @@ function populateFarmerDropdown(elementId, selectedId = '', includeAllOption = f
 function openRecordAdvanceModal(preselectedFarmerId = '') {
   populateFarmerDropdown('advance-farmer-select', preselectedFarmerId);
 
+  const titleEl = document.getElementById('modal-advance-title');
+  if (titleEl) titleEl.innerText = 'Record Farmer Advance / Seeds';
+
+  const editIdInput = document.getElementById('advance-edit-id');
+  if (editIdInput) editIdInput.value = '';
+
   document.getElementById('advance-number').value = getNextAdvanceNumber();
   document.getElementById('advance-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('advance-amount').value = '';
   document.getElementById('advance-purpose').value = 'Seeds';
   document.getElementById('advance-notes').value = '';
+
+  onAdvancePurposeChanged();
+  openModal('modal-record-advance');
+}
+
+function openEditAdvanceModal(advanceId) {
+  const adv = state.advances.find(a => a.id === advanceId);
+  if (!adv) return;
+
+  populateFarmerDropdown('advance-farmer-select', adv.farmerId);
+
+  const titleEl = document.getElementById('modal-advance-title');
+  if (titleEl) titleEl.innerText = `Edit Advance (${adv.advanceNumber})`;
+
+  const editIdInput = document.getElementById('advance-edit-id');
+  if (editIdInput) editIdInput.value = adv.id;
+
+  document.getElementById('advance-number').value = adv.advanceNumber || '';
+  document.getElementById('advance-date').value = adv.date || '';
+  document.getElementById('advance-amount').value = adv.originalAmount != null ? adv.originalAmount : '';
+  document.getElementById('advance-purpose').value = adv.purpose || 'Seeds';
+  document.getElementById('advance-notes').value = adv.notes || '';
 
   onAdvancePurposeChanged();
   openModal('modal-record-advance');
@@ -1127,6 +1211,34 @@ function handleSaveAdvance(e) {
   const dateVal = document.getElementById('advance-date').value || new Date().toISOString().split('T')[0];
   const yearVal = dateVal.split('-')[0];
 
+  const editId = (document.getElementById('advance-edit-id')?.value || '').trim();
+  if (editId) {
+    const existing = state.advances.find(a => a.id === editId);
+    if (existing) {
+      existing.farmerId = farmer.id;
+      existing.farmerName = farmer.name;
+      existing.advanceNumber = document.getElementById('advance-number').value.trim() || existing.advanceNumber;
+      existing.date = dateVal;
+      existing.originalAmount = amount;
+      existing.purpose = purpose;
+      existing.notes = customNotes;
+      existing.year = yearVal;
+      existing.unpaidBalance = Math.max(0, Math.round((amount - (Number(existing.deductedAmount) || 0)) * 100) / 100);
+      if (existing.unpaidBalance === 0 && existing.originalAmount > 0) {
+        existing.status = 'PAID';
+      } else if (existing.deductedAmount > 0) {
+        existing.status = 'PARTIALLY PAID';
+      } else {
+        existing.status = 'UNPAID';
+      }
+
+      saveState();
+      closeModal('modal-record-advance');
+      renderActiveView();
+      showToast(`Advance ${existing.advanceNumber} updated successfully!`);
+      return;
+    }
+  }
   const newAdv = {
     id: 'ADV-' + Date.now(),
     advanceNumber: document.getElementById('advance-number').value.trim() || getNextAdvanceNumber(),
@@ -1157,8 +1269,9 @@ function deleteAdvance(advanceId) {
   const adv = state.advances.find(a => a.id === advanceId);
   if (!adv) return;
 
-  if (adv.deductedAmount > 0) {
-    alert(`Cannot delete Advance ${adv.advanceNumber} because ${formatINR(adv.deductedAmount)} has already been deducted in bills. Please delete or modify the corresponding bills first.`);
+  const billDeductions = (adv.deductionHistory || []).filter(d => d.billId && d.billId !== 'MANUAL_SELF');
+  if (billDeductions.length > 0) {
+    alert(`Cannot delete Advance ${adv.advanceNumber} because ${formatINR(adv.deductedAmount)} has already been deducted in commodity bills. Please delete or modify the corresponding bills first.`);
     return;
   }
 
@@ -1168,6 +1281,85 @@ function deleteAdvance(advanceId) {
     renderActiveView();
     showToast(`Advance ${adv.advanceNumber} deleted.`);
   }
+}
+
+// ==========================================
+// ADVANCE DIRECT DEDUCTION & PAID STATUS ENGINE
+// ==========================================
+
+function updateAdvanceDeduction(advanceId, rawVal) {
+  const adv = state.advances.find(a => a.id === advanceId);
+  if (!adv) return;
+
+  let val = parseFloat(rawVal);
+  if (isNaN(val) || val < 0) val = 0;
+  if (val > adv.originalAmount) {
+    alert(`Deduction cannot exceed original advance amount (${formatINR(adv.originalAmount)}). Capping at ${formatINR(adv.originalAmount)}.`);
+    val = adv.originalAmount;
+  }
+
+  adv.deductedAmount = Math.round(val * 100) / 100;
+  adv.unpaidBalance = Math.max(0, Math.round((adv.originalAmount - adv.deductedAmount) * 100) / 100);
+
+  if (adv.unpaidBalance === 0 && adv.originalAmount > 0) {
+    adv.status = 'PAID';
+  } else if (adv.deductedAmount > 0) {
+    adv.status = 'PARTIALLY PAID';
+  } else {
+    adv.status = 'UNPAID';
+  }
+
+  if (!adv.deductionHistory) adv.deductionHistory = [];
+  adv.deductionHistory = adv.deductionHistory.filter(d => d.billId !== 'MANUAL_SELF');
+  if (adv.deductedAmount > 0) {
+    adv.deductionHistory.push({
+      billId: 'MANUAL_SELF',
+      billNumber: 'Manual Deduction',
+      commodity: adv.status === 'PAID' ? 'Fully Deducted by User' : 'Direct Deduction by User',
+      amountDeducted: adv.deductedAmount,
+      deductionDate: new Date().toISOString().split('T')[0]
+    });
+  }
+
+  saveState();
+  renderActiveView();
+  showToast(`Advance ${adv.advanceNumber} deduction set to ${formatINR(adv.deductedAmount)}. Remaining: ${formatINR(adv.unpaidBalance)}`);
+}
+
+function toggleAdvancePaidStatus(advanceId, isChecked) {
+  const adv = state.advances.find(a => a.id === advanceId);
+  if (!adv) return;
+
+  if (isChecked) {
+    adv.deductedAmount = adv.originalAmount;
+    adv.unpaidBalance = 0;
+    adv.status = 'PAID';
+    if (!adv.deductionHistory) adv.deductionHistory = [];
+    adv.deductionHistory = adv.deductionHistory.filter(d => d.billId !== 'MANUAL_SELF');
+    adv.deductionHistory.push({
+      billId: 'MANUAL_SELF',
+      billNumber: 'Checkbox Settle',
+      commodity: 'Paid in Full',
+      amountDeducted: adv.originalAmount,
+      deductionDate: new Date().toISOString().split('T')[0]
+    });
+    saveState();
+    renderActiveView();
+    showToast(`Advance ${adv.advanceNumber} marked as fully PAID!`);
+  } else {
+    adv.deductedAmount = 0;
+    adv.unpaidBalance = adv.originalAmount;
+    adv.status = 'UNPAID';
+    if (!adv.deductionHistory) adv.deductionHistory = [];
+    adv.deductionHistory = adv.deductionHistory.filter(d => d.billId !== 'MANUAL_SELF');
+    saveState();
+    renderActiveView();
+    showToast(`Advance ${adv.advanceNumber} marked as UNPAID.`);
+  }
+}
+
+function setAdvanceFullPaid(advanceId) {
+  toggleAdvancePaidStatus(advanceId, true);
 }
 
 // ==========================================
